@@ -7,7 +7,7 @@ print "Starting data extraction...\n";
 
 # Fill an array with the names of all the FPs or blocks.
 # Get this from the associated text file.
-my $dbTextFile = "/auto/cppfs2n/wwwdv/wwwroot/antares/dtracker/danglers.txt";
+my $dbTextFile = "/auto/dtracker/danglers.txt";
 unless(open (TXTFILE, "<". $dbTextFile)) {
    die("ERROR - Can't open file1 to read: $!\n");
 }
@@ -24,7 +24,7 @@ foreach (@lines) {
 } 
 
 # Read in log file for analysis
-my $logPath = "/auto/ssefe5/antares_checks/latest/danglers.classification.log";
+my $logPath = "/auto/latest/danglers.classification.log";
 unless(open (TXTFILE, "<". $logPath)) {
    die("ERROR - Can't open file2 to read: $!\n");
 }
@@ -33,7 +33,7 @@ close(TXTFILE);
 
 # Construct the build number from the file name. The log is a link which points to a file with the build number in it
 my $build_number = `ls -l $logPath`; # Get long listing from ls which will contain the build number
-$build_number =~ /antares-chip_(\d+)/; # Extract the build number
+$build_number =~ /XXX-chip_(\d+)/; # Extract the build number
 $build_number = $1;
 $build_number =~ /^0*(\d+)/; # Remove any leading zeros
 $build_number = $1;
@@ -145,7 +145,7 @@ close (TXTFILE);
 
 # update total number of dangling wires in project.txt file for loading into the tracker's trivia section
 my $prior_total_bit_count;
-my $project_file = "/auto/cppfs2n/wwwdv/wwwroot/antares/dtracker/project.txt";
+my $project_file = "/auto/dtracker/project.txt";
 unless(open (INFILE, "<". $project_file)) {
    die("ERROR - Can't open file4 to read: $!\n");
 }

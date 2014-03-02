@@ -608,7 +608,7 @@ function handle_generate() {
          async: false,
          success: function(result) {
             // alert(result);
-            window.open("http://sseweb.cisco.com/antares/dtracker/generate_chart.html");  // reads a separate html code that processes and generates the graphs
+            window.open("http://XXX.XXX.com/dtracker/generate_chart.html");  // reads a separate html code that processes and generates the graphs
          },
          error: function(xhr) {
             alert("Error reported back to dtracker.html");
@@ -661,7 +661,7 @@ function rtl_a_d_all() {
          data: datastr,
          success: function(result) {
             // alert(result);
-            window.open("http://sseweb.cisco.com/antares/dtracker/generate_chart.html","_blank");   // '_blank' specifies a new tab as the target of the new html to be displayed
+            window.open("http://XXX.XXX.com/dtracker/generate_chart.html","_blank");   // '_blank' specifies a new tab as the target of the new html to be displayed
          },
          error: function(xhr) {
             alert("Error reported back to dtracker.html");
@@ -694,7 +694,7 @@ function rtl_a_d_l2() {
          data: datastr,
          success: function(result) {
             // alert(result);
-            window.open("http://sseweb.cisco.com/antares/dtracker/generate_chart.html","_blank");
+            window.open("http://XXX.XXX.com/dtracker/generate_chart.html","_blank");
          },
          error: function(xhr) {
             alert("Error reported back to dtracker.html");
@@ -727,7 +727,7 @@ function rtl_a_d_qpb() {
          data: datastr,
          success: function(result) {
             // alert(result);
-            window.open("http://sseweb.cisco.com/antares/dtracker/generate_chart.html","_blank");
+            window.open("http://XXX.XXX.com/dtracker/generate_chart.html","_blank");
          },
          error: function(xhr) {
             alert("Error reported back to dtracker.html");
@@ -760,7 +760,7 @@ function rtl_a_d_sch () {
          data: datastr,
          success: function(result) {
             // alert(result);
-            window.open("http://sseweb.cisco.com/antares/dtracker/generate_chart.html","_blank");
+            window.open("http://XXX.XXX.com/dtracker/generate_chart.html","_blank");
          },
          error: function(xhr) {
             alert("Error reported back to dtracker.html");
@@ -890,7 +890,7 @@ Users can see the curent state for any FP or block as well as any issues that ne
 cellpadding="10">
 
 <tr>
-  <td valign="top" style="width:600;font-family:Arial"><u>RTL & DFT-RTL Status</u><br>&nbsp&nbsp&nbsp;<i>Integration Ready</i><br>&nbsp&nbsp&nbsp;Check the box when your FP is ready to be integrated into the top-level netlist (including is released to the antares container)<br><br>&nbsp&nbsp&nbsp;<i>DFT RTL Status</i><br>&nbsp&nbsp&nbsp;NA&nbsp&nbsp&#8212&nbsp&nbsp; Some blocks may have nothing to do (rare).<br>&nbsp&nbsp&nbsp;CP&nbsp&nbsp&#8212&nbsp&nbsp Coding pending. RTL coding is to be done but is not complete.<br>&nbsp&nbsp&nbsp;DVP&nbsp&nbsp&#8212&nbsp&nbsp DV pending. RTL coding complete, but DV of it is not.<br>&nbsp&nbsp&nbsp;DVC&nbsp&nbsp&#8212&nbsp&nbsp; DV complete. Essentially complete and done and final resting place.</td>
+  <td valign="top" style="width:600;font-family:Arial"><u>RTL & DFT-RTL Status</u><br>&nbsp&nbsp&nbsp;<i>Integration Ready</i><br>&nbsp&nbsp&nbsp;Check the box when your FP is ready to be integrated into the top-level netlist (including is released to the container)<br><br>&nbsp&nbsp&nbsp;<i>DFT RTL Status</i><br>&nbsp&nbsp&nbsp;NA&nbsp&nbsp&#8212&nbsp&nbsp; Some blocks may have nothing to do (rare).<br>&nbsp&nbsp&nbsp;CP&nbsp&nbsp&#8212&nbsp&nbsp Coding pending. RTL coding is to be done but is not complete.<br>&nbsp&nbsp&nbsp;DVP&nbsp&nbsp&#8212&nbsp&nbsp DV pending. RTL coding complete, but DV of it is not.<br>&nbsp&nbsp&nbsp;DVC&nbsp&nbsp&#8212&nbsp&nbsp; DV complete. Essentially complete and done and final resting place.</td>
   <td valign="top" style="width:600;font-family:Arial"><u>RTL STAGE</u><br><i>Indicate current RTL Stage. Intent is to show the level of design content and correctness, not including review status.</i><br>NS&nbsp&nbsp&#8212&nbsp&nbsp Not started.<br>S&nbsp&nbsp&#8212&nbsp&nbsp Started, but not yet at RTL-A level.<br>{A, B, C, D, E, F} indicate current stage.</td>
 </tr>
 <tr>
@@ -1044,17 +1044,17 @@ check_headers[11] = "fmea_head";
 // links to each checker's report - array index associated with check_headers index
 var check_linkers = new Array();
 check_linkers[0] = "";
-check_linkers[1] = "/auto/ssefe5/antares_checks/latest/specter_index.html";
+check_linkers[1] = "/auto/latest/specter_index.html";
 check_linkers[2] = "";
 check_linkers[3] = "";
 check_linkers[4] = "";
-check_linkers[5] = "/auto/ssefe5/antares_checks/latest/danglers.classification.log";
-check_linkers[6] = "/auto/ssefe5/antares_checks/latest/sse_correlate_memories.log";
+check_linkers[5] = "/auto/latest/danglers.classification.log";
+check_linkers[6] = "/auto/latest/sse_correlate_memories.log";
 check_linkers[7] = "";
-check_linkers[8] = "/auto/ssefe5/antares_checks/latest/check_rdl_summary.log";
-check_linkers[9] = "/auto/ssefe5/antares_checks/latest/vcs_index.html";
+check_linkers[8] = "/auto/latest/check_rdl_summary.log";
+check_linkers[9] = "/auto/latest/vcs_index.html";
 check_linkers[10] = "";
-check_linkers[11] = "/auto/ssefe5/antares_checks/latest/check_fmea_summary.log";
+check_linkers[11] = "/auto/latest/check_fmea_summary.log";
 
 var long_check = "";
 var temp = "";
@@ -1315,7 +1315,7 @@ for (var fp_iterator in fp_names) {
       statusTable_cell.style.color = "Green";
       statusTable_cell.style.backgroundColor = "White";
    }else{
-      var linker = "/auto/ssefe5/antares_checks/latest/danglers.classification.log";
+      var linker = "/auto/latest/danglers.classification.log";
       statusTable_cell.innerHTML= '<a href="'+linker+'"target="_blank">'+cellval+'</a>';
       statusTable_cell.style.color = "Red";
       statusTable_cell.style.backgroundColor = "#FFDDDD";
@@ -1973,7 +1973,7 @@ for (var fp_iterator in fp_names) {
          statusTable_cell.style.color = "Green";
          statusTable_cell.style.backgroundColor = "White";
       }else{
-         var linker = "/auto/ssefe5/antares_checks/latest/sse_correlate_memories.log";
+         var linker = "/auto/latest/correlate_memories.log";
          statusTable_cell.innerHTML= '<a href="'+linker+'"target="_blank">'+cellval+'</a>';
          statusTable_cell.style.color = "Red";
          statusTable_cell.style.backgroundColor = "#FFDDDD";
@@ -2014,7 +2014,7 @@ for (var fp_iterator in fp_names) {
          statusTable_cell.style.color = "Green";
          statusTable_cell.style.backgroundColor = "White";
       }else{
-         var linker = "/auto/ssefe5/antares_checks/latest/check_rdl_summary.log";
+         var linker = "/auto/latest/check_rdl_summary.log";
          statusTable_cell.innerHTML= '<a href="'+linker+'"target="_blank">'+cellval+'</a>';
          statusTable_cell.style.color = "Red";
          statusTable_cell.style.backgroundColor = "#FFDDDD";
@@ -2055,7 +2055,7 @@ for (var fp_iterator in fp_names) {
          statusTable_cell.style.color = "Green";
          statusTable_cell.style.backgroundColor = "White";
       }else{
-         var linker = "/auto/ssefe5/antares_checks/latest/specter_index.html";
+         var linker = "/auto/latest/specter_index.html";
          statusTable_cell.innerHTML= '<a href="'+linker+'"target="_blank">'+cellval+'</a>';
          statusTable_cell.style.color = "Red";
          statusTable_cell.style.backgroundColor = "#FFDDDD";
@@ -2077,7 +2077,7 @@ for (var fp_iterator in fp_names) {
          statusTable_cell.style.color = "Green";
          statusTable_cell.style.backgroundColor = "White";
       }else{
-         var linker = "/auto/ssefe5/antares_checks/latest/vcs_index.html";
+         var linker = "/auto/latest/vcs_index.html";
          statusTable_cell.innerHTML= '<a href="'+linker+'"target="_blank">'+cellval+'</a>';
          statusTable_cell.style.color = "Red";
          statusTable_cell.style.backgroundColor = "#FFDDDD";
@@ -2118,7 +2118,7 @@ for (var fp_iterator in fp_names) {
          statusTable_cell.style.color = "Green";
          statusTable_cell.style.backgroundColor = "White";
       }else{
-         var linker = "/auto/ssefe5/antares_checks/latest/check_fmea_summary.log";
+         var linker = "/auto/latest/check_fmea_summary.log";
          statusTable_cell.innerHTML= '<a href="'+linker+'"target="_blank">'+cellval+'</a>';
          statusTable_cell.style.color = "Red";
          statusTable_cell.style.backgroundColor = "#FFDDDD";
