@@ -1,0 +1,27 @@
+/* Display position of blocks with Firefox web browser */
+.second
+{
+color:blue;
+position:relative;
+left:150px;
+top:-410px;
+}
+.third
+{
+position:relative;
+left:300px;
+top:-820px;
+}
+.fourth
+{
+color:blue;
+position:relative;
+left:450px;
+top:-1230px;
+}
+.fifth
+{
+position:relative;
+left:600px;
+top:-1640px;
+}

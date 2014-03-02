@@ -1,0 +1,4 @@
+/* This stylesheet modifies the defaulted style of the datepicker overlay */ 
+div.ui-datepicker{
+   font-size: 80%;
+}

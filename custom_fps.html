@@ -1,0 +1,236 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+
+<!-- This html provides an option to customize the desired FPs to view on the web page -->
+
+<html>
+
+<head>
+<title>My Design Tracker</title>
+
+<link rel="stylesheet" type="text/css" />
+<style type="text/css">
+body
+{
+background-image:url('background.jpg');
+background-repeat:no-repeat;
+}
+.save
+{
+position:absolute;
+top:600px;
+</style>
+
+<!--[if gte IE 5]>
+<style type="text/css">
+.second
+{
+color:blue;
+position:relative;
+left:150px;
+top:-400px;
+}
+.third
+{
+position:relative;
+left:300px;
+top:-800px;
+}
+.fourth
+{
+color:blue;
+position:relative;
+left:450px;
+top:-1200px;
+}
+.fifth
+{
+position:relative;
+left:600px;
+top:-1600px;
+}
+</style>
+<![endif]-->
+
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<script type="text/javascript">
+// Fix for browser dependent styles for blocks display
+var browser = navigator.userAgent;
+var ff = "Firefox";
+var saf = "Safari";
+var chr = "Chrome";
+if (browser.match(ff)) {
+   newStyle = document.getElementsByTagName('link');
+   newStyle[0].href="ffstyle.css";
+}
+else if (browser.match(chr)) {
+   newStyle = document.getElementsByTagName('link');
+   newStyle[0].href="chromestyle.css";
+}
+else { 
+   newStyle = document.getElementsByTagName('link');
+   newStyle[0].href="safaristyle.css";
+}
+
+// This function creates a cookie to store user FPs
+function setCookie(c_name,value,exdays) {
+   var exdate=new Date();
+   exdate.setDate(exdate.getDate() + exdays);
+   var c_value=escape(value) + ((exdays==null) ? "" : ";expires="+exdate.toUTCString());
+   document.cookie=c_name + "=" + c_value;
+}
+
+// This function checks if user FPs are in cookie  
+function checkFP_Cookie() {
+   var fps=getFP_Cookie("fps");
+   if (fps!=null && fps!="") {
+        fps = fps.replace(/,$/,"");	
+	return fps;
+   }
+   else
+	return null;
+}
+
+// This function reads in the user FPs from the cookie
+function getFP_Cookie(c_name) {
+   var i,x,y,ARRcookies=document.cookie.split(";");
+   for (i=0;i<ARRcookies.length;i++) {
+      x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
+      y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
+      x=x.replace(/^\s+|\s+$/g,"");
+      if (x==c_name) {
+         return unescape(y);
+      }
+   }
+}
+
+// Process submitted form
+function submitForm (e) {
+   var handle_submit;
+   if (!e) var e = window.event;
+   if (e.target) handle_submit = e.target;
+   else if (e.srcElement) handle_submit = e.srcElement;
+   if (handle_submit.nodeType == 3)  // defeat Safari bug
+      handle_submit = handle_submit.parentNode;
+   // handle submitted form
+   var frm = handle_submit.form;
+   var fp_names = ""; 
+   for (var i=0; i<frm.length; i++) {
+      if (frm.elements[i].checked == true) {
+	 fp_names += frm.elements[i].id + ","; 
+      }
+   }
+   setCookie("fps",fp_names,365);
+   window.opener.parentProcess();
+}
+
+// Read in all current FPs from directory
+function get_FPs () {
+   fpstr = "";
+   $.ajax ({
+      url: "fps.pl",
+      async: false,
+      success: function (result) {
+         fpstr = result;
+      },
+      error: function (xhr) {
+         alert ("Error reported back to dtracker.html");
+      }
+  });
+}
+
+// Checks All the checkboxes in the form
+function checkAll(forms) {
+   var fields = forms[0].elements;
+   for (var i=0; i<fields.length; i++)
+      fields[i].checked = true;
+}
+
+// Unchecks All the checkboxes in the form
+function uncheckAll(forms) {
+   var fields = forms[0].elements;
+   for (var i=0; i<fields.length; i++)
+      fields[i].checked = false;
+}
+
+get_FPs();
+fpary = new Array();
+var patt = /[\w]+_FP/;
+fpstr = fpstr.replace("\n","");
+fpstr += " ";
+var i = 0;
+
+while (fpstr != "") {
+   fpary[i] = fpstr.match(patt);
+   fpstr = fpstr.replace(fpary[i]+" ","");
+   i++;
+} // end while
+
+</script>
+</head>
+
+<body>
+<h1>My Design Tracker</h1>
+<h2> Select the FPs that you regularly use below: </h2>
+<input type="button" name="CheckAll" value="Check All" onclick="checkAll(document.forms)" />
+<input type="button" name="UncheckAll" value="UnCheck All" onclick="uncheckAll(document.forms)" /><br></br>
+<form id="FP List" name="myform" action="" method="GET"></form> 
+
+<script type="text/javascript"> 
+var count = 1;
+for (fp_iterator in fpary) {
+   var breaks = document.createElement('br');
+   var labl = document.createElement('label');
+   labl.innerHTML = fpary[fp_iterator];
+   labl.htmlFor = fpary[fp_iterator];
+   var check_fps = document.createElement("input");
+   check_fps.type = "checkbox";
+   check_fps.id = fpary[fp_iterator];
+   check_fps.name = "list";
+
+   if (count <= 20) {labl.className="first";}
+   else if (count > 20 && count <= 40) {labl.className="second";}
+   else if (count > 40 && count <= 60) {labl.className="third";}
+   else if (count > 60 && count <= 80) {labl.className="fourth";}
+   else if (count > 80) {labl.className="fifth";}
+
+   if (count <= 20) {check_fps.className="first";}
+   else if (count > 20 && count <= 40) {check_fps.className="second";}
+   else if (count > 40 && count <= 60) {check_fps.className="third";}
+   else if (count > 60 && count <= 80) {check_fps.className="fourth";}
+   else if (count > 80) {check_fps.className="fifth";}
+
+   var form_fps = document.getElementById("FP List");
+   form_fps.appendChild(check_fps);
+   form_fps.appendChild(labl);
+   form_fps.appendChild(breaks);
+   count++;
+} // end for loop
+
+var save = document.createElement("input");
+save.type = "submit";
+save.name = "save"
+save.className = "save"
+save.id = "save"
+save.value = "Save";
+save.style.fontSize="large";
+document.getElementById("FP List").appendChild(save);
+save.onclick=submitForm;
+
+// This checks cookie for FPs to remember previous selections
+var fp_select = checkFP_Cookie();
+var fp_selary = fp_select.split(",");
+var c = document.getElementById("FP List").elements;
+for (x in fp_selary) {
+   for(var i=0; i<c.length; i++) {
+      if (fp_selary[x] == c[i].id) { 
+         c[i].checked = "checked";
+         break;
+      }
+   }
+}
+</script>
+
+</body>
+
+</html> 

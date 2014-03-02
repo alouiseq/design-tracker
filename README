@@ -1,0 +1,12 @@
+----- Tools and Languages -----
+In my first web development project, I designed and developed 65% of this "Design Tracker" website implementing both client and server-side web development tools. Using Vim in a Unix environment, I created static files in HTML/CSS/Javascript/jQuery variety and communicated with server-side data written in Perl. The scripts are called via CGI using AJAX commands. Due to time constraints, no database was used but instead text files contained all the data.
+
+
+----- Background -----
+Design Tracker creates a repository for engineering teams that allows each member to track each others' design at each development phase. This is especially useful since team members are tasked at least one component of the overall product. Engineers are able to interact with the site to add/update their progress, and consequently allowing managers to get an overview of the development rate to make potential changes in the time and costs of developing the product. 
+
+Data mining reports from various sources are compiled and are viewable on the design tracker site which allows engineers to view bugs in their code and potential setbacks. Thus, this website promotes progress transparency, seamless transitions between design phases, and ensures proper deadlines are met in the alloted time. I was able to develop a functional website within the given time constraints by learning web development from the ground up with minimal supervision. I also maintained the code and addressed users' feature requests before the end of my internship.
+
+
+----- Improvements -----
+With  that can be refactored through the use of external Javascript files, code reuse, and cleaner and more efficient code via frameworks. jQuery (Angular.js, Backbone.js, etc) could be utilized to further simplify DOM manipulations as opposed to vanilla Javascript.

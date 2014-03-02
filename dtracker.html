@@ -1,0 +1,2187 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+
+<!--This HTML code displays the front-end design tracker for an ASIC-->
+
+<html>
+
+<head>
+<!-- <meta http-equiv="refresh" content="10"> -->
+<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="expires" content="-1">
+<link rel="shortcut icon" href="./favicon.ico">
+<title> Design Tracker</title>
+<style type="text/css">
+p.normal {font-family:Arial;font-size:120%;font-weight:normal;}
+p.bold {font-family:Arial;font-size:120%;font-weight:bold;}
+p.bigbold {font-family:Arial;font-size:210%;font-weight:bold;}
+h3 {font-family:Arial;}
+textarea {width:100%;font-family:Arial;font-size:100%;font-weight:normal;resize:none;overflow:auto}
+</style>
+<link rel="stylesheet" type="text/css" media="all" href="jquery_UI_datepicker/themes/redmond/jquery-ui-1.8.18.custom.css" />
+<link rel="stylesheet" type="text/css" media="all" href="jquery_UI_datepicker/themes/redmond/jquery-ui-1.8.18.aquiatch.css" />
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<script type="text/javascript" src="jquery_UI_datepicker/themes/redmond/jquery-ui-1.8.18.custom.min.js"></script>
+
+
+<script type="text/javascript">
+// Event Handler for keypress of numeric-only textarea
+function handle_numeric_only_entry(e){
+   var handle_keypress_targ;
+   if (!e) var e = window.event;
+   if (e.target) handle_keypress_targ = e.target;
+   else if (e.srcElement) handle_keypress_targ = e.srcElement;
+   if (handle_keypress_targ.nodeType == 3)  // defeat Safari bug
+      handle_keypress_targ = handle_keypress_targ.parentNode;
+   if(window.event) { // Chrome and IE
+        var charCode = e.keyCode; // IE and Chrome 
+   } else if (e.which) { // Safari 4, Firefox 3.0.4
+      var charCode = e.which;
+   } else { // Firefox special characters - arrow keys
+        var arrowKey = e.keyCode; 
+   } 
+   // Handler makes certain only numeric values can be entered for the PRRQ# and EDCS#
+   // Also allow backspace and dash
+   if ((charCode == 8) || (arrowKey == 37) || (arrowKey == 39) || (charCode == 45) || (charCode >= 48 && charCode <= 57)) {
+      return true;
+   }else{
+      return false;
+   }
+}
+
+
+// Event Handler for Integration Ready Status change
+function handle_Integration_Status_change(e){
+   var handle_Integration_Status_change_targ;
+   if (!e) var e = window.event;
+   if (e.target) handle_Integration_Status_change_targ = e.target;
+   else if (e.srcElement) handle_Integration_Status_change_targ = e.srcElement;
+   if (handle_Integration_Status_change_targ.nodeType == 3)  // defeat Safari bug
+      handle_Integration_Status_change_targ = handle_Integration_Status_change_targ.parentNode;
+   // Handler posts call to save_Integration_Status.cgi with arguments FP and Text
+   var FP_to_mod = handle_Integration_Status_change_targ.name.replace("Integration_Status_selector_", "");
+   var associated_text = eval("Integration_Status_selector_".concat(FP_to_mod)).checked;
+//   alert(handle_Integration_Status_change_targ.name + " detected change. Save Integration Status for FP " + FP_to_mod + " to file. Integration Status is '" + associated_text + "'");
+   var datastr = FP_to_mod + "/mod/" + associated_text;
+   $.ajax({
+      url: "save_Integration_Status.cgi",
+      async: false,
+      data: datastr,
+      success: function(data) {
+         //alert(data);
+      },
+      error: function(xhr) {
+         alert("Error reported back to dtracker.html");
+      }
+   });
+   // Adjust Integration Status date to show current date as most recent change
+   var currentTime = new Date();
+   var month = currentTime.getMonth() + 1;
+   var day = currentTime.getDate();
+   var year = currentTime.getFullYear();
+   year = year.toString().substring(2);
+   var fulldate = month + "/" + day + "/" + year;
+   //alert("Change date to " + fulldate);
+   var datastr = FP_to_mod + "/mod/" + fulldate;
+   $.ajax({
+      url: "save_Integration_Status_date.cgi",
+      async: false,
+      data: datastr,
+      success: function(data) {
+         //alert(data);
+         // change the visible date in the page to match the date just saved
+         var textbox_to_change = "Integration_Status_datebox_" + FP_to_mod;
+         window[textbox_to_change].value = fulldate;
+      },
+      error: function(xhr) {
+         alert("Error reported back to dtracker.html");
+      }
+   });
+}
+
+// Event Handler for DFT RTL Status change
+function handle_DFT_RTL_Status_change(e){
+   var handle_DFT_RTL_Status_change_targ;
+   if (!e) var e = window.event;
+   if (e.target) handle_DFT_RTL_Status_change_targ = e.target;
+   else if (e.srcElement) handle_DFT_RTL_Status_change_targ = e.srcElement;
+   if (handle_DFT_RTL_Status_change_targ.nodeType == 3)  // defeat Safari bug
+      handle_DFT_RTL_Status_change_targ = handle_DFT_RTL_Status_change_targ.parentNode;
+   // Handler posts call to save_DFT_RTL_Status.cgi with arguments FP and Text
+   var FP_to_mod = handle_DFT_RTL_Status_change_targ.name.replace("DFT_RTL_Status_selector_", "");
+   var associated_text = handle_DFT_RTL_Status_change_targ.options[handle_DFT_RTL_Status_change_targ.selectedIndex].value; 
+   //alert(handle_DFT_RTL_Status_change_targ.name + " detected change. Save DFT RTL Status for FP " + FP_to_mod + " to file. DFT RTL Status is '" + associated_text + "'");
+   var datastr = FP_to_mod + "/mod/" + associated_text;
+   $.ajax({
+      url: "save_DFT_RTL_Status.cgi",
+      async: false,
+      data: datastr,
+      success: function(data) {
+         //alert(data);
+      },
+      error: function(xhr) {
+         alert("Error reported back to dtracker.html");
+      }
+   });
+   // Adjust date to show current date as most recent change
+   var currentTime = new Date();
+   var month = currentTime.getMonth() + 1;
+   var day = currentTime.getDate();
+   var year = currentTime.getFullYear();
+   year = year.toString().substring(2);
+   var fulldate = month + "/" + day + "/" + year;
+   //alert("Change date to " + fulldate);
+   var datastr = FP_to_mod + "/mod/" + fulldate;
+   $.ajax({
+      url: "save_DFT_RTL_Status_date.cgi",
+      async: false,
+      data: datastr,
+      success: function(data) {
+         //alert(data);
+         // change the visible date in the page to match the date just saved
+         var textbox_to_change = "DFT_RTL_Status_datebox_" + FP_to_mod;
+         window[textbox_to_change].value = fulldate;
+      },
+      error: function(xhr) {
+         alert("Error reported back to dtracker.html");
+      }
+   });
+}
+
+// Event Handler for Timing Constraints Reviewed change
+function handle_Timing_Constraints_Reviewed_change(e){
+   var handle_Timing_Constraints_Reviewed_change_targ;
+   if (!e) var e = window.event;
+   if (e.target) handle_Timing_Constraints_Reviewed_change_targ = e.target;
+   else if (e.srcElement) handle_Timing_Constraints_Reviewed_change_targ = e.srcElement;
+   if (handle_Timing_Constraints_Reviewed_change_targ.nodeType == 3)  // defeat Safari bug
+      handle_Timing_Constraints_Reviewed_change_targ = handle_Timing_Constraints_Reviewed_change_targ.parentNode;
+   // Handler posts call to save_Timing_Constraints_Reviewed.cgi with arguments FP and Text
+   var FP_to_mod = handle_Timing_Constraints_Reviewed_change_targ.name.replace("Timing_Constraints_Reviewed_selector_", "");
+   var associated_text = handle_Timing_Constraints_Reviewed_change_targ.options[handle_Timing_Constraints_Reviewed_change_targ.selectedIndex].value;
+   //alert(handle_Timing_Constraints_Reviewed_change_targ.name + " detected change. Save Timing Constraints Reviewed for FP " + FP_to_mod + " to file. Timing Constraints Reviewed is '" + associated_text + "'");
+   var datastr = FP_to_mod + "/mod/" + associated_text;
+   $.ajax({
+      url: "save_Timing_Constraints_Reviewed.cgi",
+      async: false,
+      data: datastr,
+      success: function(data) {
+         //alert(data);
+      },
+      error: function(xhr) {
+         alert("Error reported back to dtracker.html");
+      }
+   });
+   // Adjust date to show current date as most recent change
+   var currentTime = new Date();
+   var month = currentTime.getMonth() + 1;
+   var day = currentTime.getDate();
+   var year = currentTime.getFullYear();
+   year = year.toString().substring(2);
+   var fulldate = month + "/" + day + "/" + year;
+   //alert("Change date to " + fulldate);
+   var datastr = FP_to_mod + "/mod/" + fulldate;
+   $.ajax({
+      url: "save_Timing_Constraints_Reviewed_date.cgi",
+      async: false,
+      data: datastr,
+      success: function(data) {
+         //alert(data);
+         // change the visible date in the page to match the date just saved
+         var textbox_to_change = "Timing_Constraints_Reviewed_datebox_" + FP_to_mod;
+         window[textbox_to_change].value = fulldate;
+      },
+      error: function(xhr) {
+         alert("Error reported back to dtracker.html");
+      }
+   });
+}
+
+// Event Handler for RTL STAGE change
+function handle_RTL_STAGE_change(e){
+   var handle_RTL_STAGE_change_targ;
+   if (!e) var e = window.event;
+   if (e.target) handle_RTL_STAGE_change_targ = e.target;
+   else if (e.srcElement) handle_RTL_STAGE_change_targ = e.srcElement;
+   if (handle_RTL_STAGE_change_targ.nodeType == 3)  // defeat Safari bug
+      handle_RTL_STAGE_change_targ = handle_RTL_STAGE_change_targ.parentNode;
+   // Handler posts call to save_RTL_STAGE.cgi with arguments BLK and Text
+   var BLK_to_mod = handle_RTL_STAGE_change_targ.name.replace("RTL_STAGE_selector_", "");
+   var associated_text = handle_RTL_STAGE_change_targ.options[handle_RTL_STAGE_change_targ.selectedIndex].value;
+   //alert(handle_RTL_STAGE_change_targ.name + " detected change. Save RTL STAGE for block " + BLK_to_mod + " to file. RTL STAGE is '" + associated_text + "'");
+   var datastr = BLK_to_mod + "/mod/" + associated_text;
+   //alert(datastr);
+   $.ajax({
+      url: "save_RTL_STAGE.cgi",
+      async: false,
+      data: datastr,
+      success: function(data) {
+         //alert(data);
+      },
+      error: function(xhr) {
+         alert("Error reported back to dtracker.html");
+      }
+   });
+   // Adjust date to show current date as most recent change
+   var currentTime = new Date();
+   var month = currentTime.getMonth() + 1;
+   var day = currentTime.getDate();
+   var year = currentTime.getFullYear();
+   year = year.toString().substring(2);
+   var fulldate = month + "/" + day + "/" + year;
+   //alert("Change date to " + fulldate);
+   var datastr = BLK_to_mod + "/mod/" + fulldate;
+   $.ajax({
+      url: "save_RTL_STAGE_date.cgi",
+      async: false,
+      data: datastr,
+      success: function(data) {
+         //alert(data);
+         // change the visible date in the page to match the date just saved
+         var textbox_to_change = "RTL_STAGE_datebox_" + BLK_to_mod;
+         window[textbox_to_change].value = fulldate;
+      },
+      error: function(xhr) {
+         alert("Error reported back to dtracker.html");
+      }
+   });
+}
+
+// Event Handler for RDL Review Status change
+function handle_RDL_Review_Status_change(e){
+   var handle_RDL_Review_Status_change_targ;
+   if (!e) var e = window.event;
+   if (e.target) handle_RDL_Review_Status_change_targ = e.target;
+   else if (e.srcElement) handle_RDL_Review_Status_change_targ = e.srcElement;
+   if (handle_RDL_Review_Status_change_targ.nodeType == 3)  // defeat Safari bug
+      handle_RDL_Review_Status_change_targ = handle_RDL_Review_Status_change_targ.parentNode;
+   // Handler posts call to save_RDL_Review_Status.cgi with arguments BLK and Text
+   var BLK_to_mod = handle_RDL_Review_Status_change_targ.name.replace("RDL_Review_Status_selector_", "");
+   var associated_text = handle_RDL_Review_Status_change_targ.options[handle_RDL_Review_Status_change_targ.selectedIndex].value;
+   //alert(handle_RDL_Review_Status_change_targ.name + " detected change. Save RDL Review Status for block " + BLK_to_mod + " to file.  RDL Review Status is '" + associated_text + "'");
+   var datastr = BLK_to_mod + "/mod/" + associated_text;
+   $.ajax({
+      url: "save_RDL_Review_Status.cgi",
+      async: false,
+      data: datastr,
+      success: function(data) {
+         //alert(data);
+      },
+      error: function(xhr) {
+         alert("Error reported back to dtracker.html");
+      }
+   });
+   // Adjust date to show current date as most recent change
+   var currentTime = new Date();
+   var month = currentTime.getMonth() + 1;
+   var day = currentTime.getDate();
+   var year = currentTime.getFullYear();
+   year = year.toString().substring(2);
+   var fulldate = month + "/" + day + "/" + year;
+   //alert("Change date to " + fulldate);
+   var datastr = BLK_to_mod + "/mod/" + fulldate;
+   $.ajax({
+      url: "save_RDL_Review_Status_date.cgi",
+      async: false,
+      data: datastr,
+      success: function(data) {
+         //alert(data);
+         // change the visible date in the page to match the date just saved
+         var textbox_to_change = "RDL_Review_Status_datebox_" + BLK_to_mod;
+         window[textbox_to_change].value = fulldate;
+      },
+      error: function(xhr) {
+         alert("Error reported back to dtracker.html");
+      }
+   });
+}
+
+// Event Handler for double click of PRRQ number
+function handle_prrq_dblclick(e){
+   var handle_prrq_dblclick_targ;
+   if (!e) var e = window.event;
+   if (e.target) handle_prrq_dblclick_targ = e.target;
+   else if (e.srcElement) handle_prrq_dblclick_targ = e.srcElement;
+   if (handle_prrq_dblclick_targ.nodeType == 3)  // defeat Safari bug
+      handle_prrq_dblclick_targ = handle_prrq_dblclick_targ.parentNode;
+   // Jump to PRRQ number from textarea
+   var associated_text = handle_prrq_dblclick_targ.value;
+   //alert("PRRQ Number is " + associated_text);
+   if (associated_text == ""){
+      alert("No PRRQ number entered. Can't jump to link.");
+   }else{
+      var prrq_link = "http://wwwin-tools.cisco.com/prrq/lookupReview.do?buttonAction=doSubmit&reviewOpt=reviews&lookIn=allQ&review=" + associated_text;
+      //alert("Link is " + prrq_link);
+      document.location.href = prrq_link;
+   }
+}
+
+// Event Handler for RTL Review Status change
+function handle_RTL_Review_Status_change(e){
+   var handle_RTL_Review_Status_change_targ;
+   if (!e) var e = window.event;
+   if (e.target) handle_RTL_Review_Status_change_targ = e.target;
+   else if (e.srcElement) handle_RTL_Review_Status_change_targ = e.srcElement;
+   if (handle_RTL_Review_Status_change_targ.nodeType == 3)  // defeat Safari bug
+      handle_RTL_Review_Status_change_targ = handle_RTL_Review_Status_change_targ.parentNode;
+   // Handler posts call to save_RTL_Review_Status.cgi with arguments BLK and Text
+   var BLK_to_mod = handle_RTL_Review_Status_change_targ.name.replace("RTL_Design_Review_Checklist_Status_selector_", "");
+   var associated_text = handle_RTL_Review_Status_change_targ.options[handle_RTL_Review_Status_change_targ.selectedIndex].value;
+   //alert(handle_RTL_Review_Status_change_targ.name + " detected change. Save RTL Review Status for block " + BLK_to_mod + " to file.  RTL Review Status is '" + associated_text + "'");
+   var datastr = BLK_to_mod + "/mod/" + associated_text;
+   $.ajax({
+      url: "save_RTL_Review_Status.cgi",
+      async: false,
+      data: datastr,
+      success: function(data) {
+         //alert(data);
+      },
+      error: function(xhr) {
+         alert("Error reported back to dtracker.html");
+      }
+   });
+   // Adjust date to show current date as most recent change
+   var currentTime = new Date();
+   var month = currentTime.getMonth() + 1;
+   var day = currentTime.getDate();
+   var year = currentTime.getFullYear();
+   year = year.toString().substring(2);
+   var fulldate = month + "/" + day + "/" + year;
+   //alert("Change date to " + fulldate);
+   var datastr = BLK_to_mod + "/mod/" + fulldate;
+   $.ajax({
+      url: "save_RTL_Review_Status_date.cgi",
+      async: false,
+      data: datastr,
+      success: function(data) {
+         //alert(data);
+         // change the visible date in the page to match the date just saved
+         var textbox_to_change = "RTL_Review_Status_datebox_" + BLK_to_mod;
+         window[textbox_to_change].value = fulldate;
+      },
+      error: function(xhr) {
+         alert("Error reported back to dtracker.html");
+      }
+   });
+}
+
+// Event Handler for double click of EDCS number
+function handle_edcs_dblclick(e){
+   var handle_edcs_dblclick_targ;
+   if (!e) var e = window.event;
+   if (e.target) handle_edcs_dblclick_targ = e.target;
+   else if (e.srcElement) handle_edcs_dblclick_targ = e.srcElement;
+   if (handle_edcs_dblclick_targ.nodeType == 3)  // defeat Safari bug
+      handle_edcs_dblclick_targ = handle_edcs_dblclick_targ.parentNode;
+   // Jump to EDCS number from textarea
+   var associated_text = handle_edcs_dblclick_targ.value;
+   //alert("EDCS Number is " + associated_text);
+   if (associated_text == ""){
+      alert("No EDCS number entered. Can't jump to link.");
+   }else{
+      var edcs_link = "http://wwwin-eng.cisco.com/protected-cgi-bin/edcs/edcs_attr_search.pl?doc_num=" + associated_text;
+      //alert("Link is " + edcs_link);
+      document.location.href = edcs_link;
+   }
+}
+
+// Event Handler for click of save buttons in the RDL Review Status column
+function handle_PRRQ_save(e){
+   alert("PRRQ# Saved!");
+   var handle_PRRQ_save_targ;
+   if (!e) var e = window.event;
+   if (e.target) handle_PRRQ_save_targ = e.target;
+   else if (e.srcElement) handle_PRRQ_save_targ = e.srcElement;
+   if (handle_PRRQ_save_targ.nodeType == 3)  // defeat Safari bug
+      handle_PRRQ_save_targ = handle_PRRQ_save_targ.parentNode;
+   // Handler posts call to save_PRRQ.cgi with arguments BLK and Text
+   var text = handle_PRRQ_save_targ.name.replace("PRRQ_button_", "");
+   var BLK_to_mod = text.replace(/__\w+/, "");
+   var associated_text = eval("PRRQ_textbox_".concat(text)).value;
+   var datastr = BLK_to_mod + "/mod/" + associated_text;
+   $.ajax({
+      url: "save_PRRQ.cgi",
+      async: false,
+      data: datastr,
+      success: function(data) {
+         //alert(data);
+      },
+      error: function(xhr) {
+         alert("Error reported back to dtracker.html");
+      }
+   });
+}
+
+// Event Handler for click of save buttons in the RTL Design Review Checklist Status column
+function handle_EDCS_save(e){
+   alert("EDCS# Saved!");
+   var handle_EDCS_save_targ;
+   if (!e) var e = window.event;
+   if (e.target) handle_EDCS_save_targ = e.target;
+   else if (e.srcElement) handle_EDCS_save_targ = e.srcElement;
+   if (handle_EDCS_save_targ.nodeType == 3)  // defeat Safari bug
+      handle_EDCS_save_targ = handle_EDCS_save_targ.parentNode;
+   // Handler posts call to save_EDCS.cgi with arguments BLK and Text
+   var text = handle_EDCS_save_targ.name.replace("EDCS_button_", "");
+   var BLK_to_mod = text.replace(/__\w+/, "");
+   var associated_text = eval("EDCS_textbox_".concat(text)).value;
+   //alert(handle_EDCS_save_targ.name + " clicked. Save EDCS# for block " + BLK_to_mod + " to file.  EDCS# is '" + associated_text + "'");
+   var datastr = BLK_to_mod + "/mod/" + associated_text;
+   $.ajax({
+      url: "save_EDCS.cgi",
+      async: false,
+      data: datastr,
+      success: function(data) {
+         //alert(data);
+      },
+      error: function(xhr) {
+         alert("Error reported back to dtracker.html");
+      }
+   });
+}
+
+// Event Handler for click of save buttons in the Comments column
+function handle_comments_save(e){
+   alert("Comment Saved!");
+   var handle_comments_save_targ;
+   if (!e) var e = window.event;
+   if (e.target) handle_comments_save_targ = e.target;
+   else if (e.srcElement) handle_comments_save_targ = e.srcElement;
+   if (handle_comments_save_targ.nodeType == 3)  // defeat Safari bug
+      handle_comments_save_targ = handle_comments_save_targ.parentNode;
+   // Handler posts call to save_comments.cgi with arguments BLK and Text
+   var text = handle_comments_save_targ.name.replace("Comments_button_", "");
+   var BLK_to_mod = text.replace(/__\w+/, "");
+   var associated_text = eval("Comments_textbox_".concat(text)).value;
+   // replace CR with \n so it isn't lost
+   associated_text = associated_text.replace(new RegExp("\\n", "g"), "GGGretGGG"); // reserved special signal for cgi to convert to \n
+   //alert(handle_comments_save_targ.name + " clicked. Save Comments for block " + BLK_to_mod + " to file.  Text is '" + associated_text + "'");
+   var datastr = BLK_to_mod + "/mod/" + associated_text;
+   //alert(datastr);
+   $.ajax({
+      url: "save_comments.cgi",
+      async: false,
+      data: datastr,
+      success: function(data) {
+         //alert(data);
+      },
+      error: function(xhr) {
+         alert("Error reported back to dtracker.html");
+      }
+   });
+}
+
+// Event Handler for date change on RTL Stage A-F Completion Date textbox
+function handle_RTL_Stage_Completion_Date(e) {
+   var handle_completion_date_targ;
+   if (!e) var e = window.event;
+   if (e.target) handle_completion_date_targ = e.target;
+   else if (e.srcElement) handle_completion_date_targ = e.srcElement;
+   if (handle_completion_date_targ.nodeType == 3)  // defeat Safari bug
+      handle_completion_date_targ = handle_completion_date_targ.parentNode;
+   // Handler posts call to save_RTL_completion_date.cgi with arguments BLK and Text
+   $("#"+handle_completion_date_targ.id).datepicker("option", "dateFormat", 'mm/dd/yy'); // specifies datepicker's date format for user's input
+   var associated_text = eval(handle_completion_date_targ.name).value;
+   var patt = /A|B|C|D|E|F/;
+   var temp = "RTL_Stage";
+   var stage = handle_completion_date_targ.name.match(patt);
+   var temp = temp + stage + "_Date_selector_";
+   var blk_fp = handle_completion_date_targ.name.replace(temp, "");
+   var BLK_to_mod = blk_fp.replace(/__\w+/, "");
+   var datastr = BLK_to_mod + "/mod/" + associated_text + "/stg/" + stage;
+   $.ajax({
+      url: "save_RTL_STAGE_completion_date.cgi",
+      async: false,
+      data: datastr,
+      success: function(data) {
+         //alert(data);
+      },
+      error: function(xhr) {
+         alert("Error reported back to dtracker.html");
+      }
+   });
+}
+
+// Event Handler for user's change of date in the datepicker textbox
+function handle_Date_Tracking_Checks(e) {
+   var handle_completion_date_targ;
+   if (!e) var e = window.event;
+   if (e.target) handle_completion_date_targ = e.target;
+   else if (e.srcElement) handle_completion_date_targ = e.srcElement;
+   if (handle_completion_date_targ.nodeType == 3)  // defeat Safari bug
+      handle_completion_date_targ = handle_completion_date_targ.parentNode;
+   // Handler posts call to save_RTL_completion_date.cgi with arguments BLK and Text
+   $("#"+handle_completion_date_targ.id).datepicker("option", "dateFormat", 'mm/dd/yy');  // specifies datepicker date format for user's date input
+   var associated_text = eval(handle_completion_date_targ.id).value;
+   var patt = /.*_selector_/;
+   var temp = handle_completion_date_targ.id.match(patt);
+   var blk_fp = handle_completion_date_targ.id.replace(temp, "");
+   var BLK_to_mod = blk_fp.replace(/__\w+/, "");
+   var checkID = handle_completion_date_targ.name;
+   var datastr = BLK_to_mod + "/mod/" + associated_text + "/track/" + checkID;
+   $.ajax({
+      url: "save_Date_Tracking_Checks.cgi",
+      async: false,
+      data: datastr,
+      success: function(data) {
+         //alert(data);
+      },
+      error: function(xhr) {
+         alert("Error reported back to dtracker.html");
+      }
+   });
+}
+
+// The code below changes between different views depending on user's selection
+function handle_views() {
+   var patt = /fp_owners|fp|rtl_status|cdc|synth|lec|timing|block_owners|rtl_stageA_date|rtl_stageB_date|rtl_stageC_date|rtl_stageD_date|rtl_stageE_date|rtl_stageF_date|rtl_stage|dv_planning_complete|basic_stimulus_complete|sanity_complete|main_function_complete|block_ready_for_speculative_freeze|block|dv_complete|rdl_review|rtl_review|memory|flopcon|danglers|rdl|dmake|specter|vcs|spyglass|fmea|revisit_plan|comments/;
+   var viewElems = document.getElementsByName("view");
+   for (var x=0; x<viewElems.length; x++) {
+      if (viewElems[x].checked == true) {
+         if (viewElems[x].value == "design") {  
+            $('#graphs').hide();
+            $('#generate').hide();
+         }
+         else {
+            $('#graphs').show();
+            $('#generate').show();
+         }
+         setView_Cookie("lastView",viewElems[x].value,365);
+         // Use XMLHttpRequest to read file to a string
+         xmlhttp = new XMLHttpRequest();
+         xmlhttp.open("GET", viewElems[x].value+".txt",true);
+         xmlhttp.send();
+         xmlhttp.onreadystatechange=function() {
+            if (xmlhttp.readyState==4 && xmlhttp.status==200) {
+               var content = xmlhttp.responseText;
+               var lines = content.split("\n");
+               for (var x=0; x<lines.length-1; x++) {
+                  var hideMe = lines[x].match(patt);
+                  var hideMe_head = hideMe + "_head";
+                  if (lines[x] == hideMe + ' = "true"') {
+                     $('.'+hideMe_head+',.'+hideMe).show();
+                     //alert(hideMe+": true");
+                  }
+                  else {
+                     $('.'+hideMe_head+',.'+hideMe).hide();
+                     //alert(hideMe+": false");
+                  }
+               }
+            }
+         }
+      }
+   } 
+}
+
+// This function generates graphs for scheduled completion dates of design and dv
+function handle_generate() {
+   var i = document.getElementById("graphs").selectedIndex;
+   var choices = document.getElementById("graphs").options;
+   var flag = 0;
+
+   // Reset graph view by to default which is to show all FPs
+   setView_Cookie("viewBy", 1, 365);
+
+   if (choices[i].text == "All") flag = 1;
+   var sortCookie = getView_Cookie("sort");   // retrieve cookie that specifies if graph is to be sorted by FPs alphabetically or by completion dates
+   if (sortCookie == "date")
+      var data = "Date";
+   else
+      var data = ""; 
+       
+   if ((choices[i].text == "DV A-F All FPs") || (flag == 1)) {   // depending on user's choice from drop-down options of block-level views
+      setView_Cookie("graph","dv_a_f_all",365);   // creates a cookie specifying the block-level graph view the user selected
+      $.ajax ({
+         url: "dv_a_f_sched_data.pl",
+         async: false,
+ 	 data: data,
+         success: function(result) {
+            // alert (result);
+        },
+         error: function(xhr) {
+            alert("Error reported back to dtracker.html");
+         }
+      });
+      $.ajax ({
+         url: "graph_dv_a_f_sched.pl",
+         async: false,
+         success: function(result) {
+            // alert(result);
+            window.open("http://sseweb.cisco.com/antares/dtracker/generate_chart.html");  // reads a separate html code that processes and generates the graphs
+         },
+         error: function(xhr) {
+            alert("Error reported back to dtracker.html");
+         }
+      });
+   }
+   if (choices[i].text == "RTL A-D All FPs")
+      rtl_a_d_all();
+   if (choices[i].text == "RTL A-D L2")  
+      rtl_a_d_l2();
+   if (choices[i].text == "RTL A-D QPB")  
+      rtl_a_d_qpb();
+   if (choices[i].text == "RTL A-D SCH")  
+      rtl_a_d_sch();
+
+   if (flag == 1) { // Display all Block Views
+      setTimeout("rtl_a_d_all()",5000);     // these time delays provides sufficient time to open all the graphs since the same png file is generated or updated for all views
+      setTimeout("rtl_a_d_l2()",3000);
+      setTimeout("rtl_a_d_qpb()",1000);
+      setTimeout("rtl_a_d_sch()",2000);
+   }
+}
+
+// ***************************************************************
+// The following functions handle processing of the RTL graphs
+// A function is created for each block-level views and graph generation
+function rtl_a_d_all() {
+      setView_Cookie("graph","rtl_a_d_all",365);
+      var sortCookie = getView_Cookie("sort");
+      if (sortCookie == "date")
+         var data = "Date";
+      else
+         data = ""; 
+
+      $.ajax ({
+         url: "rtl_a_d_sched_data.pl",
+         async: false,
+ 	 data: data,
+         success: function(result) {
+             // alert(result);
+         },
+         error: function(xhr) {
+            alert("Error reported back to dtracker.html");
+         }
+      });
+      var datastr = "all";
+      $.ajax ({
+         url: "graph_rtl_a_d_sched.pl",
+         async: false,
+         data: datastr,
+         success: function(result) {
+            // alert(result);
+            window.open("http://sseweb.cisco.com/antares/dtracker/generate_chart.html","_blank");   // '_blank' specifies a new tab as the target of the new html to be displayed
+         },
+         error: function(xhr) {
+            alert("Error reported back to dtracker.html");
+         }
+      });
+}
+function rtl_a_d_l2() {
+      setView_Cookie("graph","rtl_a_d_l2",365);
+      var sortCookie = getView_Cookie("sort");
+      if (sortCookie == "date")
+         var data = "Date";
+      else
+         data = ""; 
+
+      $.ajax ({
+         url: "rtl_a_d_l2_sched_data.pl",
+         async: false,
+ 	 data: data,
+         success: function(result) {
+            // alert(result);
+         },
+         error: function(xhr) {
+            alert("Error reported back to dtracker.html");
+         }
+      });
+      var datastr = "l2";
+      $.ajax ({
+         url: "graph_rtl_a_d_sched.pl",
+         async: false,
+         data: datastr,
+         success: function(result) {
+            // alert(result);
+            window.open("http://sseweb.cisco.com/antares/dtracker/generate_chart.html","_blank");
+         },
+         error: function(xhr) {
+            alert("Error reported back to dtracker.html");
+         }
+      });
+}
+function rtl_a_d_qpb() {
+      setView_Cookie("graph","rtl_a_d_qpb",365);
+      var sortCookie = getView_Cookie("sort");
+      if (sortCookie == "date")
+         var data = "Date";
+      else
+         data = ""; 
+
+      $.ajax ({
+         url: "rtl_a_d_qpb_sched_data.pl",
+         async: false,
+ 	 data: data,
+         success: function(result) {
+            // alert(result);
+         },
+         error: function(xhr) {
+            alert("Error reported back to dtracker.html");
+         }
+      });
+      var datastr = "qpb";
+      $.ajax ({
+         url: "graph_rtl_a_d_sched.pl",
+         async: false,
+         data: datastr,
+         success: function(result) {
+            // alert(result);
+            window.open("http://sseweb.cisco.com/antares/dtracker/generate_chart.html","_blank");
+         },
+         error: function(xhr) {
+            alert("Error reported back to dtracker.html");
+         }
+      });
+}
+function rtl_a_d_sch () {
+      setView_Cookie("graph","rtl_a_d_sch",365);
+      var sortCookie = getView_Cookie("sort");
+      if (sortCookie == "date")
+         var data = "Date";
+      else
+         data = ""; 
+
+      $.ajax ({
+         url: "rtl_a_d_sch_sched_data.pl",
+         async: false,
+ 	 data: data,
+         success: function(result) {
+            // alert(result);
+         },
+         error: function(xhr) {
+            alert("Error reported back to dtracker.html");
+         }
+      });
+      var datastr = "sch";
+      $.ajax ({
+         url: "graph_rtl_a_d_sched.pl",
+         async: false,
+         data: datastr,
+         success: function(result) {
+            // alert(result);
+            window.open("http://sseweb.cisco.com/antares/dtracker/generate_chart.html","_blank");
+         },
+         error: function(xhr) {
+            alert("Error reported back to dtracker.html");
+         }
+      });
+} 
+// This is the end of the RTL Graph functions above
+// *******************************************************
+
+// This function returns a cookie if it exists and returns null otherwise
+function getView_Cookie(c_name) {
+   var i,x,y,ARRcookies=document.cookie.split(";");
+   for (i=0;i<ARRcookies.length;i++) {
+      x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
+      y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
+      x=x.replace(/^\s+|\s+$/g,"");
+      if (x==c_name) {
+         return unescape(y);
+      }
+   }
+}
+
+// This function creates a cookie 
+function setView_Cookie(c_name,value,exdays) {
+   var exdate=new Date();
+   exdate.setDate(exdate.getDate() + exdays);
+   var c_value=escape(value) + ((exdays==null) ? "" : ";expires="+exdate.toUTCString());
+   document.cookie=c_name + "=" + c_value;
+}
+
+// This function checks if a cookie exists and sets the radio button for the saved view
+function checkView_Cookie() {
+   var lastView=getView_Cookie("lastView");
+   if (lastView!=null && lastView!="") {
+      var check = document.getElementById(lastView);
+      check.checked=true;
+      handle_views();
+   }
+   else
+      handle_views();
+}
+
+// This function checks if a cookie exists for toggle between view all and my FPs 
+function checkTog_Cookie() {
+   var tog=getView_Cookie("tog");
+   return tog;
+}
+
+// Set tog cookie to enable view ALL FPs
+function handle_viewAll_fps() {
+   setView_Cookie("tog",1,365);
+   window.location.reload();
+}
+
+// Set tog cookie to view only My FPs
+function handle_my_fps() {
+   setView_Cookie("tog",0, 365);
+   window.location.reload();
+}
+
+// Call another html to process different user FPs view 
+function custom_fp_views() {
+   myWindow = window.open("custom_fps.html");  // opens a new web page that allows user to select its FPs
+}
+
+// Closes child window and reloads this window to reflect changes
+function parentProcess() {
+   myWindow.close();   // myWindow is the child process (web page) to be closed after user completes selection of FPs and clicks the save button
+   window.location.reload();
+}
+
+// This function reads in the user FPs from the cookie
+function getFP_Cookie(c_name) {
+   var i,x,y,ARRcookies=document.cookie.split(";");
+   for (i=0;i<ARRcookies.length;i++) {
+      x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
+      y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
+      x=x.replace(/^\s+|\s+$/g,"");
+      if (x==c_name) {
+         return unescape(y);
+      }
+   }
+}
+
+// This function checks if user FPs are saved in the fps cookie  
+function checkFP_Cookie() {
+   var fps=getFP_Cookie("fps");
+   var fpary = new Array();
+   if (fps!=null && fps!="") {
+        fps = fps.replace(/,$/,"");	
+	return fps;
+   }
+   else
+	return null;
+}
+</script>
+</head>
+
+
+<body onload="checkView_Cookie()">   <!-- checks the last view of the user on page load -->
+<!--The top section contains instructions to the user and should not need to be modified-->
+<p class="bigbold">FRONT END DESIGN TRACKER  &#8212
+    <script src="project.txt" type="text/javascript"></script>
+    <script Language='JavaScript'>
+      document.write(asic_name);
+    </script>
+ASIC</p>
+<p class="normal">This tracker is used to keep track of front-end progress on each FP/Block in the
+    <script src="project.txt" type="text/javascript"></script>
+    <script Language='JavaScript'>
+      document.write(asic_name);
+    </script>
+ASIC.<br>
+Users can see the curent state for any FP or block as well as any issues that need attention.  Status for some items can be updated directly by the FP/block owners.</p>
+<ul>
+<p class="normal">
+   &bull; Columns shown with <span style="font-weight:bold;">BLACK</span> headings are ASIC specific data that is prefilled in by the ASIC project manager.<br>
+   &bull; Columns shown with <span style="font-weight:bold;color:#FF6600;">ORANGE</span> headings are "auto" filled in by tools periodically analyzing the design.<br>
+   &bull; Columns shown with <span style="font-weight:bold;color:BLUE;">BLUE</span> headings are maintained by the FP and block owners via the dropdowns and fill-ins in the table.<br>
+   &bull; <span style="font-weight:bold;color:RED;">RED</span> indicates a problem needing attention.  <span style="font-weight:bold;color:GREEN;">GREEN</span> indicates no problems reported.<br>
+   &bull; Dates shown below user entries indicate the last date the entry was updated.
+</p>
+</ul>
+
+<h3>Dropdown Instructions</h3>
+<table border="1"
+cellpadding="10">
+
+<tr>
+  <td valign="top" style="width:600;font-family:Arial"><u>RTL & DFT-RTL Status</u><br>&nbsp&nbsp&nbsp;<i>Integration Ready</i><br>&nbsp&nbsp&nbsp;Check the box when your FP is ready to be integrated into the top-level netlist (including is released to the antares container)<br><br>&nbsp&nbsp&nbsp;<i>DFT RTL Status</i><br>&nbsp&nbsp&nbsp;NA&nbsp&nbsp&#8212&nbsp&nbsp; Some blocks may have nothing to do (rare).<br>&nbsp&nbsp&nbsp;CP&nbsp&nbsp&#8212&nbsp&nbsp Coding pending. RTL coding is to be done but is not complete.<br>&nbsp&nbsp&nbsp;DVP&nbsp&nbsp&#8212&nbsp&nbsp DV pending. RTL coding complete, but DV of it is not.<br>&nbsp&nbsp&nbsp;DVC&nbsp&nbsp&#8212&nbsp&nbsp; DV complete. Essentially complete and done and final resting place.</td>
+  <td valign="top" style="width:600;font-family:Arial"><u>RTL STAGE</u><br><i>Indicate current RTL Stage. Intent is to show the level of design content and correctness, not including review status.</i><br>NS&nbsp&nbsp&#8212&nbsp&nbsp Not started.<br>S&nbsp&nbsp&#8212&nbsp&nbsp Started, but not yet at RTL-A level.<br>{A, B, C, D, E, F} indicate current stage.</td>
+</tr>
+<tr>
+  <td valign="top" style="width:600;font-family:Arial"><u>Timing Constraints Reviewed</u><br>NO&nbsp&nbsp&#8212&nbsp&nbsp Review not completed.<br>IP&nbsp&nbsp&#8212&nbsp&nbsp In progress. Review started but not completed.<br>YES&nbsp&nbsp&#8212&nbsp&nbsp Review completed.</td>
+  <td valign="top" style="width:600;font-family:Arial"><u>RDL Review Status</u><br><i>Fill in PRRQ Number once you have one. If you have multiple PRRQ# put one in this column and others in Comments column. <span style=color:BLUE;">Double click PRRQ Number to jump to PRRQ Review.</span></i><br>REUSE&nbsp&nbsp&#8212&nbsp&nbsp Reuse RDL, review waived.<br>NO&nbsp&nbsp&#8212&nbsp&nbsp Not started.<br>IP&nbsp&nbsp&#8212&nbsp&nbsp In progress in PRRQ.<br>APP&nbsp&nbsp&#8212&nbsp&nbsp All required reviewers have approved (voted) in PRRQ.</td>
+</tr>
+<tr>
+  <td valign="top" style="width:600;font-family:Arial">&nbsp</td>
+  <td valign="top" style="width:600;font-family:Arial"><u>RTL Design Review Checklist Status</u><br><i>Fill in EDCS Number once you have one. <span style=color:BLUE;">Double click EDCS Number to jump to EDCS document.</span></i><br>NO&nbsp&nbsp&#8212&nbsp&nbsp Not started.<br>EARLY - For some blocks it may be an advantage to conduct an early review (around RTL-B time). <i>Consult with your design manager.</i><br>RTL-DA&nbsp&nbsp&#8212&nbsp&nbsp Review doc approved in EDCS for column D.<br>RTL-FA&nbsp&nbsp&#8212&nbsp&nbsp Review doc approved in EDCS for column F.</td>
+</tr>
+
+</table>
+<!--End of instructions-->
+
+
+<!--This is where the tracking table begins-->
+<br>
+<hr />
+<b>Views:&nbsp;</b> 
+<input type="radio" id="design" name="view" value="design" checked onclick="handle_views()"/> Design
+<input type="radio" id="schedule" name="view" value="schedule" onclick="handle_views()"/> Schedule
+
+<input type="button" style="margin-left:350px" id="viewAll" name="viewAll" value="View All" onclick="handle_viewAll_fps()" />
+<input type="button" id="myFPs" name="myFPs" value="My FPs" onclick="handle_my_fps()" />
+<input type="button" id="custom fps" name="custom fps" value="Customize My FPs" onclick="custom_fp_views()" />
+<select id="graphs" style="margin-left:200px">
+  <option>DV A-F All FPs</option>
+  <option>RTL A-D All FPs</option>
+  <option>RTL A-D L2</option>
+  <option>RTL A-D QPB</option> 
+  <option>RTL A-D SCH</option>
+  <option>All</option>
+</select>
+<input type="button" id="generate" name="generate" value="Generate" onclick="handle_generate()"/> 
+<h3>Tracking Table</h3>
+
+<table id="statusTable" border="1" cellpadding="8">
+
+<!--This first section is the table header and will not need to be changed between ASIC projects-->
+<!--[if !IE]>Note that only the table header is created statically here and the rows for each FP are created dynamically<![endif]-->
+<tHead>
+<tr>
+
+  <th class="fp_head" id="fp_head" valign="top" style="background-color:#EEEEEE;font-size:80%;font-family:Arial">FP<br><br><i>multiple<br>unique<br>instance<br>detail<br>e.g.<br>XXX{0..n}<br>_FP</i></th>
+  <th class="fp_owners_head" id="fp_owners_head" valign="top" style="background-color:#EEEEEE;font-size:80%;font-family:Arial">Owners:<br>Design;<br>DFT;<br>PD</th>
+  <th class="rtl_status_head" id="rtl_status_head" valign="top" style="background-color:#EEEEEE;font-size:80%;font-family:Arial;color:BLUE">RTL &<br>&nbsp;DFT-RTL<br>&nbsp;Status</font></th>
+  <th class="danglers_head" id="danglers_head" valign="top" style="background-color:#EEEEEE;font-size:80%;font-family:Arial;color:#FF6600">D<br>A<br>N<br>G<br>L<br>E<br>R<br>S<br><br><br><br><br><br><br><br><br><br></th>
+  <th class="cdc_head" id="cdc_head" valign="top" style="background-color:#EEEEEE;font-size:80%;font-family:Arial;color:#FF6600">C<br>D<br>C<br><br>S<br>T<br>A<br>T<br>U<br>S<br><br><br><br><br><br><br><br></th>
+  <th class="synth_head" id="synth_head" valign="top" style="background-color:#EEEEEE;font-size:80%;font-family:Arial;color:#FF6600">S<br>Y<br>N<br>T<br>H<br><br>W<br>A<br>R<br>N<br>I<br>N<br>G<br>S<br><br><br><br></th>
+  <th class="lec_head" id="lec_head" valign="top" style="background-color:#EEEEEE;font-size:80%;font-family:Arial;color:#FF6600">L<br>E<br>C<br><br>S<br>T<br>A<br>T<br>U<br>S<br><br><br><br><br><br><br><br></th>
+  <th class="timing_head" id="timing_head" valign="top" style="background-color:#EEEEEE;font-size:80%;font-family:Arial;color:BLUE">Timing<br>&nbsp;Constraints<br>&nbsp;Reviewed</th>
+  <th class="block_head" id="block_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial">Block</th>
+  <th class="block_owners_head" id="block_owners_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial">Owners:<br>Design;<br>DV</th>
+  <th class="rtl_stage_head" id="rtl_stage_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:BLUE">RTL<br>&nbsp&nbsp;STAGE&nbsp&nbsp</th>
+  <th class="rtl_stageA_date_head" id="rtl_stageA_date_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:BLUE">RTL<br>&nbsp;STAGE A<br>&nbsp;Completion<br>&nbsp;Date</th>
+  <th class="rtl_stageB_date_head" id="rtl_stageB_date_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:BLUE">RTL<br>&nbsp;STAGE B<br>&nbsp;Completion<br>&nbsp;Date</th>
+  <th class="rtl_stageC_date_head" id="rtl_stageC_date_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:BLUE">RTL<br>&nbsp;STAGE C<br>&nbsp;Completion<br>&nbsp;Date</th>
+  <th class="rtl_stageD_date_head" id="rtl_stageD_date_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:BLUE">RTL<br>&nbsp;STAGE D<br>&nbsp;Completion<br>&nbsp;Date</th>
+  <th class="rtl_stageE_date_head" id="rtl_stageE_date_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:BLUE">RTL<br>&nbsp;STAGE E<br>&nbsp;Completion<br>&nbsp;Date</th>
+  <th class="rtl_stageF_date_head" id="rtl_stageF_date_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:BLUE">RTL<br>&nbsp;STAGE F<br>&nbsp;Completion<br>&nbsp;Date</th>
+  <th class="dv_planning_complete_head" id="dv_planning_complete_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:BLUE">DV<br>&nbsp;Planning<br>&nbsp;Complete<br>&nbsp;(DVM0)</th>
+  <th class="basic_stimulus_complete_head" id="basic_stimulus_complete_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:BLUE">Basic<br>&nbsp;Stimulus<br>&nbsp;Complete<br>&nbsp;(DVM1)</th>
+  <th class="sanity_complete_head" id="sanity_complete_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:BLUE">Sanity<br>&nbsp;Complete<br>&nbsp;(DVM2)</th>
+  <th class="main_function_complete_head" id="main_function_complete_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:BLUE">Main<br>&nbsp;Function<br>&nbsp;Complete<br>&nbsp;(DVM3)</th>
+  <th class="block_ready_for_speculative_freeze_head" id="block_ready_for_speculative_freeze_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:BLUE">Block<br>&nbsp;Ready<br>&nbsp;for<br>&nbsp;Speculative<br>&nbsp;Freeze<br>&nbsp;(DVM4)</th>
+  <th class="dv_complete_head" id="dv_complete_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:BLUE">DV<br>&nbsp;Complete<br>&nbsp;(DVM5)</th>
+  <th class="rdl_review_head" id="rdl_review_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:BLUE">RDL<br>&nbsp;Review<br>&nbsp;Status</th>
+  <th class="rtl_review_head" id="rtl_review_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:BLUE">RTL<br>&nbspDesign<br>&nbsp;Review<br>&nbsp;Checklist<br>&nbsp;Status</th>
+  <th class="memory_head" id="memory_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:#FF6600">M<br>E<br>M<br>O<br>R<br>Y<br><br>C<br>H<br>E<br>C<br>K<br><br><br><br><br><br></th>
+  <th class="flopcon_head" id="flopcon_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:#FF6600">F<br>L<br>O<br>P<br>C<br>O<br>N<br><br><br><br><br><br><br><br><br><br><br></th>
+  <th class="rdl_head" id="rdl_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:#FF6600">R<br>D<br>L<br><br>C<br>H<br>E<br>C<br>K<br>E<br>R<br><br><br><br><br><br><br></th>
+  <th class="dmake_head" id="dmake_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:#FF6600">D<br>M<br>A<br>K<br>E<br><br>W<br>A<br>R<br>N<br>I<br>N<br>G<br>S<br><br><br><br></th>
+  <th class="specter_head" id="specter_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:#FF6600">S<br>P<br>E<br>C<br>T<br>E<br>R<br><br>W<br>A<br>R<br>N<br>I<br>N<br>G<br>S<br><br></th>
+  <th class="vcs_head" id="vcs_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:#FF6600">V<br>C<br>S<br><br>W<br>A<br>R<br>N<br>I<br>N<br>G<br>S<br><br><br><br><br><br></th>
+  <th class="spyglass_head" id="spyglass_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:#FF6600">S<br>P<br>Y<br>G<br>L<br>A<br>S<br>S<br><br>L<br>I<br>N<br>T<br><br><br><br><br></th>
+  <th class="fmea_head" id="fmea_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:#FF6600">F<br>M<br>E<br>A<br><br>C<br>H<br>E<br>C<br>K<br><br><br><br><br><br><br><br></th>
+  <th class="revisit_plan_head" id="revisit_plan_head_head" valign="top" style="background-color:#DDDDDD;font-size:80%;font-family:Arial;color:BLUE">Revisit<br>&nbsp;Plan/<br>&nbsp;Progress<br>&nbsp;Date</th>
+  <!--set comment column width to 99% to maximize it within the space provided in users browser-->
+  <th class="comments_head" id="comments_head" valign="top" style="width:99%;background-color:#DDDDDD;font-size:80%;font-family:Arial;color:BLUE">Comments</th>
+</tr>
+</tHead>
+</table>
+
+
+<!--This is the code that reads the various FP and Block files in and fills out the rows of the table-->
+<script src="project.txt" type="text/javascript"></script>
+<script type="text/javascript">
+
+// Display columns according to the defaulted "Design" view
+if (document.getElementById('design').checked == true)
+   checkView_Cookie();
+
+
+var $body = $('body');
+var $scr = $('<script />').attr('type', 'text/javascript');
+var statusTableFontFamily = "Arial"; // select the font to use
+var statusTableFontSize = "80%"; // select the font size to use
+
+var check_names = new Array();
+check_names[0] = "cdc";
+check_names[5] = "memory";
+check_names[6] = "flopcon";
+check_names[7] = "danglers";
+check_names[8] = "rdl";
+check_names[9] = "vcs";
+check_names[10] = "spyglass";
+check_names[11] = "fmea";
+
+// open and read text files
+$scr.attr('src', 'cdc_status.txt')
+$body.append($scr);
+$scr.attr('src', 'synth_warnings.txt')
+$body.append($scr);
+$scr.attr('src', 'lec_status.txt')
+$body.append($scr);
+$scr.attr('src', 'memory_check.txt')
+$body.append($scr);
+$scr.attr('src', 'flopcon.txt')
+$body.append($scr);
+$scr.attr('src', 'danglers.txt')
+$body.append($scr);
+$scr.attr('src', 'rdl_checker.txt')
+$body.append($scr);
+$scr.attr('src', 'dmake_warnings.txt')
+$body.append($scr);
+$scr.attr('src', 'specter_warnings.txt')
+$body.append($scr);
+$scr.attr('src', 'vcs_warnings.txt')
+$body.append($scr);
+$scr.attr('src', 'spyglass_lint.txt')
+$body.append($scr);
+$scr.attr('src', 'fmea_check.txt')
+$body.append($scr);
+
+
+// append build number for each checks on the table headers 
+var check_headers = new Array();
+check_headers[0] = "dmake_head";
+check_headers[1] = "specter_head";
+check_headers[2] = "synth_head";
+check_headers[3] = "cdc_head";
+check_headers[4] = "lec_head";
+check_headers[5] = "danglers_head";
+check_headers[6] = "memory_head";
+check_headers[7] = "flopcon_head";
+check_headers[8] = "rdl_head";
+check_headers[9] = "vcs_head";
+check_headers[10] = "spyglass_head";
+check_headers[11] = "fmea_head";
+
+// links to each checker's report - array index associated with check_headers index
+var check_linkers = new Array();
+check_linkers[0] = "";
+check_linkers[1] = "/auto/ssefe5/antares_checks/latest/specter_index.html";
+check_linkers[2] = "";
+check_linkers[3] = "";
+check_linkers[4] = "";
+check_linkers[5] = "/auto/ssefe5/antares_checks/latest/danglers.classification.log";
+check_linkers[6] = "/auto/ssefe5/antares_checks/latest/sse_correlate_memories.log";
+check_linkers[7] = "";
+check_linkers[8] = "/auto/ssefe5/antares_checks/latest/check_rdl_summary.log";
+check_linkers[9] = "/auto/ssefe5/antares_checks/latest/vcs_index.html";
+check_linkers[10] = "";
+check_linkers[11] = "/auto/ssefe5/antares_checks/latest/check_fmea_summary.log";
+
+var long_check = "";
+var temp = "";
+var temp_linker = "";
+var long_count = 0;
+var build_count = 0;
+var index = 0;
+
+// check which header checks is the longest (checker name + build num length)
+for (var c=0; c<12; c++) {
+   var tempElem = document.getElementById(check_headers[c]);
+   var tempCheck = /dmake|specter|cdc|synth|lec|memory|flopcon|danglers|rdl|vcs|spyglass|fmea/;
+   var tempMatch = check_headers[c].match(tempCheck);
+   var tempBuild = tempMatch + "_build_num";   
+   var tempLength = window[tempBuild].length;
+
+   // initialize variables with the first checker (in the check_headers arrray) and its corresponding build number length and index
+   if (c==0) {
+      long_check = check_headers[c]; 
+      build_count = tempLength;
+      index = c;
+   }
+   else {  // variables long_check, build_count, and index should contain the checker with the longest build number, its build num length, and index 
+      if (tempLength > build_count) {
+         long_check = check_headers[c]; 
+         build_count = tempLength;
+         index = c;
+      }
+   }
+}
+
+// checker with the longest build number becomes the first element of the checkers array by swapping with dmake position (which was originally the first element)
+// the checker with the longest build number is floated to the beginning of the array as a reference to the position of the other build numbers   
+if (long_check != "dmake_head") {
+   temp = check_headers[0];
+   temp_linker = check_linkers[0];
+   check_headers[0] = long_check;
+   check_linkers[0] = check_linkers[index];
+   check_headers[index] = temp;
+   check_linkers[index] = temp_linker;
+}
+
+// traverse each checks in the table headers and insert build numbers and associated links
+for (var z=0; z<12; z++) {
+   var checkElem = document.getElementById(check_headers[z]);
+   var patcheck = /dmake|specter|cdc|synth|lec|memory|flopcon|danglers|rdl|vcs|spyglass|fmea/;
+   var match = check_headers[z].match(patcheck);
+   var build_num = match + "_build_num";   
+   var build_length = window[build_num].length;
+   
+   // the code wrapped in this if statement extracts the first checker's build num from text file and inserts it into the table header along with its link
+   if (check_headers[z] == check_headers[0]) { 
+      for (var i = 0; i<build_length; i++) {
+         var sp = document.createElement("span");
+         sp.style.fontStyle="italic";
+         sp.style.color="#000000";
+         var txt = document.createTextNode(window[build_num].charAt(i));    // each build number digit is extracted for vertical positioning
+         //sp.appendChild(txt);
+         var linker = check_linkers[0];
+ 	 var anc = document.createElement("a");
+	 anc.href=linker;
+	 anc.target="_blank";
+  	 anc.appendChild(txt);
+         sp.appendChild(anc);
+         checkElem.appendChild(sp);
+         checkElem.appendChild(sp);
+         if (i+1 < build_length) {
+            var linebreak = document.createElement('br');
+            checkElem.appendChild(linebreak);
+         }
+      }
+   }
+
+   // longest contains the longest build number - this code only applies to the first checker in the array 
+   if (check_headers[z] == check_headers[0]) {
+      var longest = build_count;
+   }
+   else { // each checker build num length is deducted from the longest length to determine the number of line breaks required to position each digit vertically after the checker's name
+      if (window[build_num].length == 4) longest-=4;
+      else if (window[build_num].length == 3) longest-=3;
+      else if (window[build_num].length == 2) longest-=2;
+      else longest-=1;
+      for (var k=0; k<longest; k++) {
+         var linebreak = document.createElement('br');
+         checkElem.appendChild(linebreak);
+      }
+      // insert build number and corresponding link for all checkers after the first checker in the checkers array
+      for (var i = 0; i<build_length; i++) {
+         var sp = document.createElement("span");
+         sp.style.fontStyle="italic";
+         sp.style.color="#000000";
+         var txt = document.createTextNode(window[build_num].charAt(i));
+         
+         // if a build number is present, a link to the report is included with the build number 
+         if (build_length > 1) {
+            var linker = check_linkers[z];
+            var anc = document.createElement("a");
+            anc.href = linker;
+            anc.target = "_blank";
+            anc.appendChild(txt);
+            sp.appendChild(anc);
+         }
+         else 
+            sp.appendChild(txt);
+
+         // after each digit of the build number is inserted, a line break is inserted to allow the next digit to position vertically
+         checkElem.appendChild(sp);
+         if (i+1 < build_length) {
+            var linebreak = document.createElement('br');
+            checkElem.appendChild(linebreak);
+         }
+      }
+      longest = build_count; // longest contains the longest build number from all the chekers 
+   }
+}
+
+var fpary = checkFP_Cookie();  // retrieve user FPs
+var tog = checkTog_Cookie();   // tog is 1 when View All FPs is desired and 0 for My FPs
+
+// Execute if user FPs are stored as cookie
+if (fpary) {
+   fpary = fpary.replace(/,/g, "|");
+   var fp_patt = new RegExp(fpary);    // create a regular expression pattern
+   //alert (fp_patt);
+}
+
+for (var fp_iterator in fp_names) {
+ // if no user FPs are present (fpary is null), default to view all FPs even if tog is 0 (view only user FPs)
+ if ((fp_names[fp_iterator].match(fp_patt)) || (!fpary) || (tog == 1)) {
+   // Get the number of blocks in this FP
+   $scr.attr('src', fp_names[fp_iterator] + '_fp.txt') // open the fp files and read in variables
+   $body.append($scr);
+   var num_blks = fp_blocks.length;
+
+   var statusTable_row=document.getElementById("statusTable").insertRow(-1);
+
+   // Display the FP name and instance detail
+   var statusTable_cell=statusTable_row.insertCell(-1);
+   statusTable_cell.id="fp";
+   statusTable_cell.className="fp";
+   statusTable_cell.rowSpan=num_blks;
+   statusTable_cell.style.verticalAlign="top";
+   statusTable_cell.style.fontSize = statusTableFontSize;
+   statusTable_cell.style.fontFamily = statusTableFontFamily;
+   statusTable_cell.title = "FP"; // hover hint
+   statusTable_cell.alt = "FP"; // hover hint for IE
+   statusTable_cell.innerHTML=fp_names[fp_iterator];
+   var breaks = document.createElement('br');
+   statusTable_cell.appendChild(breaks); 
+   var instdet = document.createTextNode(fp_instance_detail); 
+   statusTable_cell.appendChild(instdet); 
+
+   // Display the FP owners
+   var statusTable_cell=statusTable_row.insertCell(-1);
+   statusTable_cell.id="fp_owners";
+   statusTable_cell.className="fp_owners";
+   statusTable_cell.rowSpan=num_blks;
+   statusTable_cell.style.verticalAlign="top";
+   statusTable_cell.style.fontSize = statusTableFontSize;
+   statusTable_cell.style.fontFamily = statusTableFontFamily;
+   statusTable_cell.title = "Owners:Design;DFT;PD"; // hover hint
+   statusTable_cell.alt = "Owners:Design;DFT;PD"; // hover hint for IE
+   statusTable_cell.innerHTML=pd_owner;
+
+   // Display the Integration Ready checkbox and date and DFT RTL Status dropdown and date
+   var statusTable_cell=statusTable_row.insertCell(-1);
+   statusTable_cell.id="rtl_status";
+   statusTable_cell.className="rtl_status";
+   statusTable_cell.rowSpan=num_blks;
+   statusTable_cell.style.verticalAlign="top";
+   statusTable_cell.style.fontSize = statusTableFontSize;
+   statusTable_cell.style.fontFamily = statusTableFontFamily;
+   statusTable_cell.title = "RTL Status"; // hover hint
+   statusTable_cell.alt = "RTL Status"; // hover hint for IE
+   
+   // Place integration ready checkbox
+   var integ = document.createTextNode("Integration \u00a0\u00a0Ready\r"); 
+   statusTable_cell.appendChild(integ);
+   var selector_name = "Integration_Status_selector_" + fp_names[fp_iterator]; // This is the name of the selector to be inserted
+   window[selector_name] = document.createElement('input');
+   window[selector_name].type = 'checkbox';
+   window[selector_name].name = selector_name;
+   window[selector_name].title = "Check when ready"; // hover hint
+   window[selector_name].alt = "Check when ready"; // hover hint
+   if (integration_status == "true") {
+      window[selector_name].defaultChecked = true; 
+   }
+   else {
+      window[selector_name].defaultChecked = false;
+   }
+   window[selector_name].style.marginLeft="20px";
+   window[selector_name].onclick=handle_Integration_Status_change; // indicate handler for onclick event
+   statusTable_cell.appendChild(window[selector_name]); 
+   
+   // append date of latest integration update
+   // commented this out after all integration is ready - dates don't add any value now
+   //var textbox_name = "Integration_Status_datebox_" + fp_names[fp_iterator]; // This is the name of the textbox to be inserted
+   //window[textbox_name] = document.createElement('textarea');
+   //window[textbox_name].name = textbox_name;
+   //window[textbox_name].value = integration_status_date;
+   //window[textbox_name].rows = "1";
+   //window[textbox_name].style.border = "thin none transparent";
+   //window[textbox_name].style.paddingLeft="6px";
+   //window[textbox_name].style.marginBottom="7px";
+   //window[textbox_name].readOnly = true;
+   //statusTable_cell.appendChild(window[textbox_name]);
+   
+   // For DFT RTL Status, first place the dropdown selector
+   var dft = document.createTextNode("\u00a0DFT RTL \u00a0\u00a0Status");
+   statusTable_cell.appendChild(dft);
+   var breaks = document.createElement('br');
+   statusTable_cell.appendChild(breaks); 
+   var selector_name = "DFT_RTL_Status_selector_" + fp_names[fp_iterator]; // This is the name of the selector to be inserted
+   window[selector_name] = document.createElement('select');
+   window[selector_name].name = selector_name;
+   window[selector_name].title = "NA=Not applicable;CP=Coding pending;DVP=DV pending;DVC=DV complete"; // hover hint
+   window[selector_name].alt = "NA=Not applicable;CP=Coding pending;DVP=DV pending;DVC=DV complete"; // hover hint for IE
+   window[selector_name + "_options"] = ["NA", "CP", "DVP", "DVC"]; // These are the possible dropdown options
+   window[selector_name + "_option_count"] = window[selector_name + "_options"].length;
+   for (var oi=0; oi<window[selector_name + "_option_count"]; oi++){
+      window[selector_name + "_option" + oi] = document.createElement('option');
+      window[selector_name + "_option" + oi].value = window[selector_name + "_options"][oi];
+      window[selector_name + "_option" + oi].text = window[selector_name + "_options"][oi];
+      if (dft_rtl_status == window[selector_name + "_option" + oi].value){ // default to value read from file
+         window[selector_name + "_option" + oi].selected = true;
+      }else{
+         window[selector_name + "_option" + oi].selected = false;
+      }
+      window[selector_name].options.add(window[selector_name + "_option" + oi]);
+   }
+   window[selector_name].onchange=handle_DFT_RTL_Status_change; // indicate handler for onchange event
+   statusTable_cell.appendChild(window[selector_name]);
+   // append date of latest update below the dropdown
+   // Place a textarea that is used to display the date the DFT RTL Status dropdown was last updated
+   // Textarea can be made readonly and transparent so it looks just like typed text that can't be modified
+   var textbox_name = "DFT_RTL_Status_datebox_" + fp_names[fp_iterator]; // This is the name of the textbox to be inserted
+   window[textbox_name] = document.createElement('textarea');
+   window[textbox_name].name = textbox_name;
+   window[textbox_name].value = dft_rtl_status_date;
+   window[textbox_name].rows = "1";
+   window[textbox_name].style.border = "thin none transparent";
+   window[textbox_name].readOnly = true;
+   statusTable_cell.appendChild(window[textbox_name]);
+
+   // Display the DANGLERS
+   var statusTable_cell=statusTable_row.insertCell(-1);
+   statusTable_cell.id="danglers";
+   statusTable_cell.className="danglers";
+   statusTable_cell.rowSpan=num_blks;
+   statusTable_cell.style.verticalAlign="top";
+   statusTable_cell.style.fontSize = statusTableFontSize;
+   statusTable_cell.style.fontFamily = statusTableFontFamily;
+   statusTable_cell.title = "DANGLERS"; // hover hint
+   statusTable_cell.alt = "DANGLERS"; // hover hint for IE
+   var cellval = eval(fp_names[fp_iterator] + "_danglers_status");
+   if ((cellval == 0) || (cellval == "&nbsp")) {
+      statusTable_cell.innerHTML=cellval;
+      statusTable_cell.style.color = "Green";
+      statusTable_cell.style.backgroundColor = "White";
+   }else{
+      var linker = "/auto/ssefe5/antares_checks/latest/danglers.classification.log";
+      statusTable_cell.innerHTML= '<a href="'+linker+'"target="_blank">'+cellval+'</a>';
+      statusTable_cell.style.color = "Red";
+      statusTable_cell.style.backgroundColor = "#FFDDDD";
+   }
+
+   // Display the CDC STATUS
+   var statusTable_cell=statusTable_row.insertCell(-1);
+   statusTable_cell.id="cdc";
+   statusTable_cell.className="cdc";
+   statusTable_cell.rowSpan=num_blks;
+   statusTable_cell.style.verticalAlign="top";
+   statusTable_cell.style.fontSize = statusTableFontSize;
+   statusTable_cell.style.fontFamily = statusTableFontFamily;
+   statusTable_cell.title = "CDC STATUS"; // hover hint
+   statusTable_cell.alt = "CDC STATUS"; // hover hint for IE
+   var cellval = eval(fp_names[fp_iterator] + "_cdc_status");
+   statusTable_cell.innerHTML=cellval;
+   if ((cellval == 0) || (cellval == "&nbsp")) {
+      statusTable_cell.style.color = "Green";
+      statusTable_cell.style.backgroundColor = "White";
+   }else{
+      statusTable_cell.style.color = "Red";
+      statusTable_cell.style.backgroundColor = "#FFDDDD";
+   }
+
+   // Display the SYNTH WARNINGS
+   var statusTable_cell=statusTable_row.insertCell(-1);
+   statusTable_cell.id="synth";
+   statusTable_cell.className="synth";
+   statusTable_cell.rowSpan=num_blks;
+   statusTable_cell.style.verticalAlign="top";
+   statusTable_cell.style.fontSize = statusTableFontSize;
+   statusTable_cell.style.fontFamily = statusTableFontFamily;
+   statusTable_cell.title = "SYNTH WARNINGS"; // hover hint
+   statusTable_cell.alt = "SYNTH WARNINGS"; // hover hint for IE
+   var cellval = eval(fp_names[fp_iterator] + "_synth_warnings_status");
+   statusTable_cell.innerHTML=cellval;
+   if ((cellval == 0) || (cellval == "&nbsp")) {
+      statusTable_cell.style.color = "Green";
+      statusTable_cell.style.backgroundColor = "White";
+   }else{
+      statusTable_cell.style.color = "Red";
+      statusTable_cell.style.backgroundColor = "#FFDDDD";
+   }
+
+   // Display the LEC STATUS
+   var statusTable_cell=statusTable_row.insertCell(-1);
+   statusTable_cell.id="lec";
+   statusTable_cell.className="lec";
+   statusTable_cell.rowSpan=num_blks;
+   statusTable_cell.style.verticalAlign="top";
+   statusTable_cell.style.fontSize = statusTableFontSize;
+   statusTable_cell.style.fontFamily = statusTableFontFamily;
+   statusTable_cell.title = "LEC STATUS"; // hover hint
+   statusTable_cell.alt = "LEC STATUS"; // hover hint for IE
+   var cellval = eval(fp_names[fp_iterator] + "_lec_status");
+   statusTable_cell.innerHTML=cellval;
+   if ((cellval == 0) || (cellval == "&nbsp")) {
+      statusTable_cell.style.color = "Green";
+      statusTable_cell.style.backgroundColor = "White";
+   }else{
+      statusTable_cell.style.color = "Red";
+      statusTable_cell.style.backgroundColor = "#FFDDDD";
+   }
+
+   // Display the Timing Constraints Reviewed dropdown and date
+   var statusTable_cell=statusTable_row.insertCell(-1);
+   statusTable_cell.id="timing";
+   statusTable_cell.className="timing";
+   statusTable_cell.rowSpan=num_blks;
+   statusTable_cell.style.verticalAlign="top";
+   statusTable_cell.style.fontSize = statusTableFontSize;
+   statusTable_cell.style.fontFamily = statusTableFontFamily;
+   statusTable_cell.title = "Timing Constraints Reviewed"; // hover hint
+   statusTable_cell.alt = "Timing Constraints Reviewed"; // hover hint for IE
+   // First place the dropdown selector
+   var selector_name = "Timing_Constraints_Reviewed_selector_" + fp_names[fp_iterator]; // This is the name of the selector to be inserted
+   window[selector_name] = document.createElement('select');
+   window[selector_name].name = selector_name;
+   window[selector_name].title = "NO=Not completed;IP=In progress;YES=Completed"; // hover hint
+   window[selector_name].alt = "NO=Not completed;IP=In progress;YES=Completed"; // hover hint for IE
+   window[selector_name + "_options"] = ["NO", "IP", "YES"]; // These are the possible dropdown options
+   window[selector_name + "_option_count"] = window[selector_name + "_options"].length;
+   for (var oi=0; oi<window[selector_name + "_option_count"]; oi++){
+      window[selector_name + "_option" + oi] = document.createElement('option');
+      window[selector_name + "_option" + oi].value = window[selector_name + "_options"][oi];
+      window[selector_name + "_option" + oi].text = window[selector_name + "_options"][oi];
+      if (timing_constraints_reviewed_status == window[selector_name + "_option" + oi].value){ // default to value read from file
+         window[selector_name + "_option" + oi].selected = true;
+      }else{
+         window[selector_name + "_option" + oi].selected = false;
+      }
+      window[selector_name].options.add(window[selector_name + "_option" + oi]);
+   }
+   window[selector_name].onchange=handle_Timing_Constraints_Reviewed_change; // indicate handler for onchange event
+   statusTable_cell.appendChild(window[selector_name]);
+   // append date of latest update below the dropdown
+   // Place a textarea that is used to display the date the Timing Constraint's Reviewed dropdown was last updated
+   // Textarea can be made readonly and transparent so it looks just like typed text that can't be modified
+   var textbox_name = "Timing_Constraints_Reviewed_datebox_" + fp_names[fp_iterator]; // This is the name of the textbox to be inserted
+   window[textbox_name] = document.createElement('textarea');
+   window[textbox_name].name = textbox_name;
+   window[textbox_name].value = timing_constraints_reviewed_status_date;
+   window[textbox_name].rows = "1";
+   window[textbox_name].style.border = "thin none transparent";
+   window[textbox_name].readOnly = true;
+   statusTable_cell.appendChild(window[textbox_name]);
+
+   // Loop through the blocks that are in this FP and generate rows for them
+   for (var blk_iterator in fp_blocks) {
+      var randomizer = Math.floor(Math.random()*1000000);
+      var filecall = "_blk.txt?" + randomizer;
+      //$scr.attr('src', fp_blocks[blk_iterator] + '_blk.txt');
+      $scr.attr('src', fp_blocks[blk_iterator] + filecall);
+      $body.append($scr);
+
+      // Display the Block name
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="block";
+      statusTable_cell.className="block";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "Block"; // hover hint
+      statusTable_cell.alt = "Block"; // hover hint for IE
+      statusTable_cell.innerHTML=fp_blocks[blk_iterator];
+
+      // Display the Block Owners: Design and DV
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="block_owners";
+      statusTable_cell.className="block_owners";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "Owners:Design;DV"; // hover hint
+      statusTable_cell.alt = "Owners:Design;DV"; // hover hint for IE
+      statusTable_cell.innerHTML=design_owners;
+
+      // Display the RTL STAGE dropdown and date
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="rtl_stage";
+      statusTable_cell.className="rtl_stage";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "RTL STAGE"; // hover hint
+      statusTable_cell.alt = "RTL STAGE"; // hover hint
+      // First place the dropdown selector
+      var selector_name = "RTL_STAGE_selector_" + fp_blocks[blk_iterator]; // This is the name of the selector to be inserted
+      window[selector_name] = document.createElement('select');
+      window[selector_name].name = selector_name;
+      window[selector_name].title = "NS=Not started;S=Started;A-F=Current stage"; // hover hint
+      window[selector_name].alt = "NS=Not started;S=Started;A-F=Current stage"; // hover hint for IE
+      window[selector_name + "_options"] = ["NS", "S", "A", "B", "C", "D", "E", "F"]; // These are the possible dropdown options
+      window[selector_name + "_option_count"] = window[selector_name + "_options"].length;
+      for (var oi=0; oi<window[selector_name + "_option_count"]; oi++){
+         window[selector_name + "_option" + oi] = document.createElement('option');
+         window[selector_name + "_option" + oi].value = window[selector_name + "_options"][oi];
+         window[selector_name + "_option" + oi].text = window[selector_name + "_options"][oi];
+         if (rtl_stage_status == window[selector_name + "_option" + oi].value){ // default to value read from file
+            window[selector_name + "_option" + oi].selected = true;
+         }else{
+            window[selector_name + "_option" + oi].selected = false;
+         }
+         window[selector_name].options.add(window[selector_name + "_option" + oi]);
+      }
+      window[selector_name].onchange=handle_RTL_STAGE_change; // indicate handler for onchange event
+      statusTable_cell.appendChild(window[selector_name]);
+      // Append date of latest update below the dropdown
+      // Place a textarea that is used to display the date the STAGE was last updated
+      // Textarea can be made readonly and transparent so it looks just like typed text that can't be modified
+      var textbox_name = "RTL_STAGE_datebox_" + fp_blocks[blk_iterator]; // This is the name of the textbox to be inserted
+      window[textbox_name] = document.createElement('textarea');
+      window[textbox_name].name = textbox_name;
+      window[textbox_name].value = rtl_stage_status_date;
+      window[textbox_name].cols = 5;
+      window[textbox_name].rows = "1";
+      window[textbox_name].style.border = "thin none transparent";
+      window[textbox_name].readOnly = true;
+      statusTable_cell.appendChild(window[textbox_name]);
+
+      // Display RTL Stage A Date from an interactive calendar overlay
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="rtl_stageA_date";
+      statusTable_cell.className="rtl_stageA_date";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "RTL Stage A"; // hover hint
+      statusTable_cell.alt = "RTL Stage A"; // hover hint for IE
+      var selector_name = "RTL_StageA_Date_selector_" + fp_blocks[blk_iterator] + "__" + fp_names[fp_iterator];
+      window[selector_name] = document.createElement('input');
+      window[selector_name].type = "text";
+      window[selector_name].title = "RTL Stage A Completion Date";
+      window[selector_name].id = selector_name;
+      window[selector_name].size = 7; // 10 characters but less than 100% font size
+      window[selector_name].style.paddingLeft = "3%";
+      window[selector_name].style.paddingRight = "3%";
+      window[selector_name].style.textAlign = 'center';
+      window[selector_name].name = selector_name;
+      window[selector_name].value = rtl_stageA_status_completion_date;
+      statusTable_cell.appendChild(window[selector_name]);
+      $("#"+selector_name).datepicker(); // create a datepicker for each block
+      window[selector_name].onchange=handle_RTL_Stage_Completion_Date;
+
+      // Display RTL Stage B Date from an interactive calendar overlay
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="rtl_stageB_date";
+      statusTable_cell.className="rtl_stageB_date";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "RTL Stage B"; // hover hint
+      statusTable_cell.alt = "RTL Stage B"; // hover hint for IE
+      var selector_name = "RTL_StageB_Date_selector_" + fp_blocks[blk_iterator] + "__" + fp_names[fp_iterator];
+      window[selector_name] = document.createElement('input');
+      window[selector_name].type = "text";
+      window[selector_name].title = "RTL Stage B Completion Date";
+      window[selector_name].id = selector_name;
+      window[selector_name].size = 7; // 10 characters but less than 100% font size
+      window[selector_name].style.paddingLeft = "3%";
+      window[selector_name].style.paddingRight = "3%";
+      window[selector_name].style.textAlign = 'center';
+      window[selector_name].name = selector_name;
+      window[selector_name].value = rtl_stageB_status_completion_date;
+      statusTable_cell.appendChild(window[selector_name]);
+      $("#"+selector_name).datepicker(); // create a datepicker for each block
+      window[selector_name].onchange=handle_RTL_Stage_Completion_Date;
+
+      // Display RTL Stage C Date from an interactive calendar overlay
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="rtl_stageC_date";
+      statusTable_cell.className="rtl_stageC_date";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "RTL Stage C"; // hover hint
+      statusTable_cell.alt = "RTL Stage C"; // hover hint for IE
+      var selector_name = "RTL_StageC_Date_selector_" + fp_blocks[blk_iterator] + "__" + fp_names[fp_iterator];
+      window[selector_name] = document.createElement('input');
+      window[selector_name].type = "text";
+      window[selector_name].title = "RTL Stage C Completion Date";
+      window[selector_name].id = selector_name;
+      window[selector_name].size = 7; // 10 characters but less than 100% font size
+      window[selector_name].style.paddingLeft = "3%";
+      window[selector_name].style.paddingRight = "3%";
+      window[selector_name].style.textAlign = 'center';
+      window[selector_name].name = selector_name;
+      window[selector_name].value = rtl_stageC_status_completion_date;
+      statusTable_cell.appendChild(window[selector_name]);
+      $("#"+selector_name).datepicker(); // create a datepicker for each block
+      window[selector_name].onchange=handle_RTL_Stage_Completion_Date;
+
+      // Display RTL Stage D Date from an interactive calendar overlay
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="rtl_stageD_date";
+      statusTable_cell.className="rtl_stageD_date";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "RTL Stage D"; // hover hint
+      statusTable_cell.alt = "RTL Stage D"; // hover hint for IE
+      var selector_name = "RTL_StageD_Date_selector_" + fp_blocks[blk_iterator] + "__" + fp_names[fp_iterator];
+      window[selector_name] = document.createElement('input');
+      window[selector_name].type = "text";
+      window[selector_name].title = "RTL Stage D Completion Date";
+      window[selector_name].id = selector_name;
+      window[selector_name].size = 7; // 10 characters but less than 100% font size
+      window[selector_name].style.paddingLeft = "3%";
+      window[selector_name].style.paddingRight = "3%";
+      window[selector_name].style.textAlign = 'center';
+      window[selector_name].name = selector_name;
+      window[selector_name].value = rtl_stageD_status_completion_date;
+      statusTable_cell.appendChild(window[selector_name]);
+      $("#"+selector_name).datepicker(); // create a datepicker for each block
+      window[selector_name].onchange=handle_RTL_Stage_Completion_Date;
+
+      // Display RTL Stage E Date from an interactive calendar overlay
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="rtl_stageE_date";
+      statusTable_cell.className="rtl_stageE_date";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "RTL Stage E"; // hover hint
+      statusTable_cell.alt = "RTL Stage E"; // hover hint for IE
+      var selector_name = "RTL_StageE_Date_selector_" + fp_blocks[blk_iterator] + "__" + fp_names[fp_iterator];
+      window[selector_name] = document.createElement('input');
+      window[selector_name].type = "text";
+      window[selector_name].title = "RTL Stage E Completion Date";
+      window[selector_name].id = selector_name;
+      window[selector_name].size = 7; // 10 characters but less than 100% font size
+      window[selector_name].style.paddingLeft = "3%";
+      window[selector_name].style.paddingRight = "3%";
+      window[selector_name].style.textAlign = 'center';
+      window[selector_name].name = selector_name;
+      window[selector_name].value = rtl_stageE_status_completion_date;
+      statusTable_cell.appendChild(window[selector_name]);
+      $("#"+selector_name).datepicker(); // create a datepicker for each block
+      window[selector_name].onchange=handle_RTL_Stage_Completion_Date;
+
+      // Display RTL Stage F Date from an interactive calendar overlay
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="rtl_stageF_date";
+      statusTable_cell.className="rtl_stageF_date";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "RTL Stage F"; // hover hint
+      statusTable_cell.alt = "RTL Stage F"; // hover hint for IE
+      var selector_name = "RTL_StageF_Date_selector_" + fp_blocks[blk_iterator] + "__" + fp_names[fp_iterator];
+      window[selector_name] = document.createElement('input');
+      window[selector_name].type = "text";
+      window[selector_name].title = "RTL Stage F Completion Date";
+      window[selector_name].id = selector_name;
+      window[selector_name].size = 7; // 10 characters but less than 100% font size
+      window[selector_name].style.paddingLeft = "3%";
+      window[selector_name].style.paddingRight = "3%";
+      window[selector_name].style.textAlign = 'center';
+      window[selector_name].name = selector_name;
+      window[selector_name].value = rtl_stageF_status_completion_date;
+      statusTable_cell.appendChild(window[selector_name]);
+      $("#"+selector_name).datepicker(); // create a datepicker for each block
+      window[selector_name].onchange=handle_RTL_Stage_Completion_Date;
+
+      // Display DV Planning Complete with datepicker
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="dv_planning_complete";
+      statusTable_cell.className="dv_planning_complete";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "DV Planning Complete (DVM0)"; // hover hint
+      statusTable_cell.alt = "DV Planning Complete (DVM0)"; // hover hint for IE
+      var selector_name = "DV_Planning_selector_" + fp_blocks[blk_iterator] + "__" + fp_names[fp_iterator];
+      window[selector_name] = document.createElement('input');
+      window[selector_name].type = "text";
+      window[selector_name].title = "DV Planning Completion Date";
+      window[selector_name].id = selector_name;
+      window[selector_name].size = 7; // 10 characters but less than 100% font size
+      window[selector_name].style.paddingLeft = "3%";
+      window[selector_name].style.paddingRight = "3%";
+      window[selector_name].style.textAlign = 'center';
+      window[selector_name].name = "dv_planning_complete";
+      window[selector_name].value = dv_planning_complete;
+      statusTable_cell.appendChild(window[selector_name]);
+      $("#"+selector_name).datepicker(); // create a datepicker for each block
+      window[selector_name].onchange=handle_Date_Tracking_Checks;
+
+      // Display Basic Stimulus Complete with datepicker
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="basic_stimulus_complete";
+      statusTable_cell.className="basic_stimulus_complete";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "Basic Stimulus Complete (DVM1)"; // hover hint
+      statusTable_cell.alt = "Basic Stimulus Complete (DVM1)"; // hover hint for IE
+      var selector_name = "Basic_Stimulus_selector_" + fp_blocks[blk_iterator] + "__" + fp_names[fp_iterator];
+      window[selector_name] = document.createElement('input');
+      window[selector_name].type = "text";
+      window[selector_name].title = "Basic Stimulus Completion Date";
+      window[selector_name].id = selector_name;
+      window[selector_name].size = 7; // 10 characters but less than 100% font size
+      window[selector_name].style.paddingLeft = "3%";
+      window[selector_name].style.paddingRight = "3%";
+      window[selector_name].style.textAlign = 'center';
+      window[selector_name].name = "basic_stimulus_complete";
+      window[selector_name].value = basic_stimulus_complete;
+      statusTable_cell.appendChild(window[selector_name]);
+      $("#"+selector_name).datepicker(); // create a datepicker for each block
+      window[selector_name].onchange=handle_Date_Tracking_Checks;
+
+      // Display Sanity Complete with datepicker
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="sanity_complete";
+      statusTable_cell.className="sanity_complete";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "Sanity Complete (DVM2)"; // hover hint
+      statusTable_cell.alt = "Sanity Complete (DVM2)"; // hover hint for IE
+      var selector_name = "Sanity_selector_" + fp_blocks[blk_iterator] + "__" + fp_names[fp_iterator];
+      window[selector_name] = document.createElement('input');
+      window[selector_name].type = "text";
+      window[selector_name].title = "Sanity Completion Date";
+      window[selector_name].id = selector_name;
+      window[selector_name].size = 7; // 10 characters but less than 100% font size
+      window[selector_name].style.paddingLeft = "3%";
+      window[selector_name].style.paddingRight = "3%";
+      window[selector_name].style.textAlign = 'center';
+      window[selector_name].name = "sanity_complete";
+      window[selector_name].value = sanity_complete;
+      statusTable_cell.appendChild(window[selector_name]);
+      $("#"+selector_name).datepicker(); // create a datepicker for each block
+      window[selector_name].onchange=handle_Date_Tracking_Checks;
+
+      // Display Main Function Complete with datepicker
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="main_function_complete";
+      statusTable_cell.className="main_function_complete";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "Main Function Complete (DVM3)"; // hover hint
+      statusTable_cell.alt = "Main Function Complete (DVM3)"; // hover hint for IE
+      var selector_name = "Main_Function_selector_" + fp_blocks[blk_iterator] + "__" + fp_names[fp_iterator];
+      window[selector_name] = document.createElement('input');
+      window[selector_name].type = "text";
+      window[selector_name].title = "Main Function Completion Date";
+      window[selector_name].id = selector_name;
+      window[selector_name].size = 7; // 10 characters but less than 100% font size
+      window[selector_name].style.paddingLeft = "3%";
+      window[selector_name].style.paddingRight = "3%";
+      window[selector_name].style.textAlign = 'center';
+      window[selector_name].name = "main_function_complete";
+      window[selector_name].value = main_function_complete;
+      statusTable_cell.appendChild(window[selector_name]);
+      $("#"+selector_name).datepicker(); // create a datepicker for each block
+      window[selector_name].onchange=handle_Date_Tracking_Checks;
+
+      // Display Block Ready for Speculative Freeze with datepicker
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="block_ready_for_speculative_freeze";
+      statusTable_cell.className="block_ready_for_speculative_freeze";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "Block Ready For Speculative Freeze (DVM4)"; // hover hint
+      statusTable_cell.alt = "Block Ready For Speculative Freeze (DVM4)"; // hover hint for IE
+      var selector_name = "Block_Ready_For_Speculative_Freeze_selector_" + fp_blocks[blk_iterator] + "__" + fp_names[fp_iterator];
+      window[selector_name] = document.createElement('input');
+      window[selector_name].type = "text";
+      window[selector_name].title = "Block Ready_For Speculative Freeze Date";
+      window[selector_name].id = selector_name;
+      window[selector_name].size = 7; // 10 characters but less than 100% font size
+      window[selector_name].style.paddingLeft = "3%";
+      window[selector_name].style.paddingRight = "3%";
+      window[selector_name].style.textAlign = 'center';
+      window[selector_name].name = "block_ready_for_speculative_freeze";
+      window[selector_name].value = block_ready_for_speculative_freeze;
+      statusTable_cell.appendChild(window[selector_name]);
+      $("#"+selector_name).datepicker(); // create a datepicker for each block
+      window[selector_name].onchange=handle_Date_Tracking_Checks;
+
+      // Display DV Complete with datepicker
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="dv_complete";
+      statusTable_cell.className="dv_complete";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "DV Complete (DVM5)"; // hover hint
+      statusTable_cell.alt = "DV Complete (DVM5)"; // hover hint for IE
+      var selector_name = "DV_Complete_selector_" + fp_blocks[blk_iterator] + "__" + fp_names[fp_iterator];
+      window[selector_name] = document.createElement('input');
+      window[selector_name].type = "text";
+      window[selector_name].title = "DV Completion Date";
+      window[selector_name].id = selector_name;
+      window[selector_name].size = 7; // 10 characters but less than 100% font size
+      window[selector_name].style.paddingLeft = "3%";
+      window[selector_name].style.paddingRight = "3%";
+      window[selector_name].style.textAlign = 'center';
+      window[selector_name].name = "dv_complete";
+      window[selector_name].value = dv_complete;
+      statusTable_cell.appendChild(window[selector_name]);
+      $("#"+selector_name).datepicker(); // create a datepicker for each block
+      window[selector_name].onchange=handle_Date_Tracking_Checks;
+
+      // Display Revisit Plan and Progress with datepicker
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="revisit_plan";
+      statusTable_cell.className="revisit_plan";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "Revisit Plan/Progress"; // hover hint
+      statusTable_cell.alt = "Revisit Plan/Progress"; // hover hint for IE
+      var selector_name = "Revisit_Plan_Date_selector_" + fp_blocks[blk_iterator] + "__" + fp_names[fp_iterator];
+      window[selector_name] = document.createElement('input');
+      window[selector_name].type = "text";
+      window[selector_name].title = "Revisit Plan/Progress Date";
+      window[selector_name].id = selector_name;
+      window[selector_name].size = 7; // 10 characters but less than 100% font size
+      window[selector_name].style.paddingLeft = "3%";
+      window[selector_name].style.paddingRight = "3%";
+      window[selector_name].style.textAlign = 'center';
+      window[selector_name].name = "revisit_plan_date";
+      window[selector_name].value = revisit_plan_date;
+      statusTable_cell.appendChild(window[selector_name]);
+      $("#"+selector_name).datepicker(); // create a datepicker for each block
+      window[selector_name].onchange=handle_Date_Tracking_Checks;
+
+      // Display the RDL Review Status dropdown, date, and PRRQ number
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="rdl_review";
+      statusTable_cell.className="rdl_review";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "RDL Review Status"; // hover hint
+      statusTable_cell.alt = "RDL Review Status"; // hover hint for IE
+      // First place the dropdown selector
+      var selector_name = "RDL_Review_Status_selector_" + fp_blocks[blk_iterator]; // This is the name of the selector to be inserted
+      window[selector_name] = document.createElement('select');
+      window[selector_name].name = selector_name;
+      window[selector_name].title = "REUSE=Reuse RDL review waived;NO=Not started;IP=In progress.;APP=Approved"; // hover hint
+      window[selector_name].alt = "REUSE=Reuse RDL review waived;NO=Not started;IP=In progress.;APP=Approved"; // hover hint for IE
+      window[selector_name + "_options"] = ["REUSE", "NO", "IP", "APP"]; // These are the possible dropdown options
+      window[selector_name + "_option_count"] = window[selector_name + "_options"].length;
+      for (var oi=0; oi<window[selector_name + "_option_count"]; oi++){
+         window[selector_name + "_option" + oi] = document.createElement('option');
+         window[selector_name + "_option" + oi].value = window[selector_name + "_options"][oi];
+         window[selector_name + "_option" + oi].text = window[selector_name + "_options"][oi];
+         if (rdl_review_status == window[selector_name + "_option" + oi].value){ // default to value read from file
+            window[selector_name + "_option" + oi].selected = true;
+         }else{
+            window[selector_name + "_option" + oi].selected = false;
+         }
+         window[selector_name].options.add(window[selector_name + "_option" + oi]);
+      }
+      window[selector_name].onchange=handle_RDL_Review_Status_change; // indicate handler for onchange event
+      statusTable_cell.appendChild(window[selector_name]);
+      // append date of latest update below the dropdown
+      // Place a textarea that is used to display the date the RDL Review Status was last updated
+      // Textarea can be made readonly and transparent so it looks just like typed text that can't be modified
+      var textbox_name = "RDL_Review_Status_datebox_" + fp_blocks[blk_iterator]; // This is the name of the textbox to be inserted
+      window[textbox_name] = document.createElement('textarea');
+      window[textbox_name].name = textbox_name;
+      window[textbox_name].value = rdl_review_status_date;
+      window[textbox_name].rows = "1";
+      window[textbox_name].style.border = "thin none transparent";
+      window[textbox_name].style.height = "18px";
+      window[textbox_name].readOnly = true;
+      statusTable_cell.appendChild(window[textbox_name]);
+      // Place a textarea that is used to display the title "PRRQ#" for the upcoming textarea
+      // Textarea can be made readonly and transparent so it looks just like typed text that can't be modified
+      var textbox_name = "RDL_Review_Status_PRRQtext_" + fp_blocks[blk_iterator]; // This is the name of the textbox to be inserted
+      window[textbox_name] = document.createElement('textarea');
+      window[textbox_name].name = textbox_name;
+      window[textbox_name].value = "PRRQ #";
+      window[textbox_name].rows = "1";
+      window[textbox_name].style.border = "thin none transparent";
+      window[textbox_name].style.height = "18px";
+      window[textbox_name].readOnly = true;
+      statusTable_cell.appendChild(window[textbox_name]);
+      // Now place a textarea that is used to display/input the PRRQ#
+      var textbox_name = "PRRQ_textbox_" + fp_blocks[blk_iterator] + "__" + fp_names[fp_iterator]; // This is the name of the textbox to be inserted
+      window[textbox_name] = document.createElement('textarea');
+      window[textbox_name].name = textbox_name;
+      window[textbox_name].value = rdl_review_prrq_number;
+      window[textbox_name].title = "Enter PRRQ Number"; // hover hint
+      window[textbox_name].alt = "Enter PRRQ Number"; // hover hint for IE
+      //window[textbox_name].rows = "1";
+      window[textbox_name].style.height = "25px";
+      window[textbox_name].onkeypress=handle_numeric_only_entry; // This is the event handler call for the keypress event
+      window[textbox_name].ondblclick=handle_prrq_dblclick; // This is the event handler call for the double click event
+      statusTable_cell.appendChild(window[textbox_name]);
+      // Now place an input button to allow a modified comment to be saved
+      var textbox_button = "PRRQ_button_" + fp_blocks[blk_iterator] + "__" + fp_names[fp_iterator]; // This is the button that saves the text
+      window[textbox_button] = document.createElement('input');
+      window[textbox_button].type = "button";
+      window[textbox_button].name = textbox_button;
+      window[textbox_button].value = "Save";
+      window[textbox_button].onclick=handle_PRRQ_save; // This is the event handler call for the click event
+      statusTable_cell.appendChild(window[textbox_button]);
+
+      // Display the RTL Design Review Checklist Status dropdown, date, and EDCS number
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="rtl_review";
+      statusTable_cell.className="rtl_review";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "RTL Design Review Checklist Status"; // hover hint
+      statusTable_cell.alt = "RTL Design Review Checklist Status"; // hover hint for IE
+      // First place the dropdown selector
+      var selector_name = "RTL_Design_Review_Checklist_Status_selector_" + fp_blocks[blk_iterator]; // This is the name of the selector to be inserted
+      window[selector_name] = document.createElement('select');
+      window[selector_name].name = selector_name;
+      window[selector_name].title = "NO=Not started;EARLY=Early review completed;DA=Col D completed & approved;FA=Col F completed & approved"; // hover hint
+      window[selector_name].alt = "NO=Not started;EARLY=Early review completed;APP=Approved"; // hover hint for IE
+      window[selector_name + "_options"] = ["NO", "EARLY", "RTL-DA", "RTL-FA"]; // These are the possible dropdown options
+      window[selector_name + "_option_count"] = window[selector_name + "_options"].length;
+      for (var oi=0; oi<window[selector_name + "_option_count"]; oi++){
+         window[selector_name + "_option" + oi] = document.createElement('option');
+         window[selector_name + "_option" + oi].value = window[selector_name + "_options"][oi];
+         window[selector_name + "_option" + oi].text = window[selector_name + "_options"][oi];
+         if (rtl_design_review_checklist_status == window[selector_name + "_option" + oi].value){ // default to value read from file
+            window[selector_name + "_option" + oi].selected = true;
+         }else{
+            window[selector_name + "_option" + oi].selected = false;
+         }
+         window[selector_name].options.add(window[selector_name + "_option" + oi]);
+      }
+      window[selector_name].onchange=handle_RTL_Review_Status_change; // indicate handler for onchange event
+      statusTable_cell.appendChild(window[selector_name]);
+      // append date of latest update below the dropdown
+      // Place a textarea that is used to display the date the RTL Review Status was last updated
+      // Textarea can be made readonly and transparent so it looks just like typed text that can't be modified
+      var textbox_name = "RTL_Review_Status_datebox_" + fp_blocks[blk_iterator]; // This is the name of the textbox to be inserted
+      window[textbox_name] = document.createElement('textarea');
+      window[textbox_name].name = textbox_name;
+      window[textbox_name].value = rtl_design_review_checklist_status_date;
+      window[textbox_name].rows = "1";
+      window[textbox_name].style.border = "thin none transparent";
+      window[textbox_name].style.height = "18px";
+      window[textbox_name].readOnly = true;
+      statusTable_cell.appendChild(window[textbox_name]);
+      // Place a textarea that is used to display the title "EDCS#" for the upcoming textarea
+      // Textarea can be made readonly and transparent so it looks just like typed text that can't bmemory_check.txte modified
+      var textbox_name = "RTL_Review_Status_EDCStext_" + fp_blocks[blk_iterator]; // This is the name of the textbox to be inserted
+      window[textbox_name] = document.createElement('textarea');
+      window[textbox_name].name = textbox_name;
+      window[textbox_name].value = "EDCS #";
+      window[textbox_name].rows = "1";
+      window[textbox_name].style.border = "thin none transparent";
+      window[textbox_name].style.height = "18px";
+      window[textbox_name].readOnly = true;
+      statusTable_cell.appendChild(window[textbox_name]);
+      // Now place a textarea that is used to display/input the EDCS#
+      var textbox_name = "EDCS_textbox_" + fp_blocks[blk_iterator] + "__" + fp_names[fp_iterator]; // This is the name of the textbox to be inserted
+      window[textbox_name] = document.createElement('textarea');
+      window[textbox_name].name = textbox_name;
+      window[textbox_name].value = rtl_design_review_checklist_edcs_number;
+      window[textbox_name].rows = "1";
+      window[textbox_name].style.height = "25px";
+      window[textbox_name].title = "Enter EDCS Number"; // hover hint
+      window[textbox_name].alt = "Enter EDCS Number"; // hover hint for IE
+      window[textbox_name].onkeypress=handle_numeric_only_entry; // This is the event handler call for the keypress event
+      window[textbox_name].ondblclick=handle_edcs_dblclick; // This is the event handler call for the double click event
+      statusTable_cell.appendChild(window[textbox_name]);
+      // Now place an input button to allow a modified comment to be saved
+      var textbox_button = "EDCS_button_" + fp_blocks[blk_iterator] + "__" + fp_names[fp_iterator]; // This is the button that saves the text
+      window[textbox_button] = document.createElement('input');
+      window[textbox_button].type = "button";
+      window[textbox_button].name = textbox_button;
+      window[textbox_button].value = "Save";
+      window[textbox_button].onclick=handle_EDCS_save; // This is the event handler call for the click event
+      statusTable_cell.appendChild(window[textbox_button]);
+
+      // Display the MEMORY CHECK
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="memory";
+      statusTable_cell.className="memory";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "MEMORY CHECK"; // hover hint
+      statusTable_cell.alt = "MEMORY CHECK"; // hover hint for IE
+      var cellval = eval(fp_blocks[blk_iterator] + "_memory_check_status");
+      statusTable_cell.innerHTML=cellval;
+      if ((cellval == 0) || (cellval == "&nbsp")) {
+         statusTable_cell.innerHTML=cellval;
+         statusTable_cell.style.color = "Green";
+         statusTable_cell.style.backgroundColor = "White";
+      }else{
+         var linker = "/auto/ssefe5/antares_checks/latest/sse_correlate_memories.log";
+         statusTable_cell.innerHTML= '<a href="'+linker+'"target="_blank">'+cellval+'</a>';
+         statusTable_cell.style.color = "Red";
+         statusTable_cell.style.backgroundColor = "#FFDDDD";
+      }
+
+      // Display the FLOPCON
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="flopcon";
+      statusTable_cell.className="flopcon";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "FLOPCON"; // hover hint
+      statusTable_cell.alt = "FLOPCON"; // hover hint for IE
+      var cellval = eval(fp_blocks[blk_iterator] + "_flopcon_status");
+      statusTable_cell.innerHTML=cellval;
+      if ((cellval == 0) || (cellval == "&nbsp")) {
+         statusTable_cell.style.color = "Green";
+         statusTable_cell.style.backgroundColor = "White";
+      }else{
+         statusTable_cell.style.color = "Red";
+         statusTable_cell.style.backgroundColor = "#FFDDDD";
+      }
+
+      // Display the RDL CHECKER
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="rdl";
+      statusTable_cell.className="rdl";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "RDL CHECKER"; // hover hint
+      statusTable_cell.alt = "RDL CHECKER"; // hover hint for IE
+      var cellval = eval(fp_blocks[blk_iterator] + "_rdl_checker_status");
+      statusTable_cell.innerHTML=cellval;
+      if ((cellval == 0) || (cellval == "&nbsp")) {
+         statusTable_cell.innerHTML=cellval;
+         statusTable_cell.style.color = "Green";
+         statusTable_cell.style.backgroundColor = "White";
+      }else{
+         var linker = "/auto/ssefe5/antares_checks/latest/check_rdl_summary.log";
+         statusTable_cell.innerHTML= '<a href="'+linker+'"target="_blank">'+cellval+'</a>';
+         statusTable_cell.style.color = "Red";
+         statusTable_cell.style.backgroundColor = "#FFDDDD";
+      }
+
+      // Display the DMAKE WARNINGS
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="dmake";
+      statusTable_cell.className="dmake";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "DMAKE WARNINGS"; // hover hint
+      statusTable_cell.alt = "DMAKE WARNINGS"; // hover hint for IE
+      var cellval = eval(fp_blocks[blk_iterator] + "_dmake_warnings_status");
+      statusTable_cell.innerHTML=cellval;
+      if ((cellval == 0) || (cellval == "&nbsp")) {
+         statusTable_cell.style.color = "Green";
+         statusTable_cell.style.backgroundColor = "White";
+      }else{
+         statusTable_cell.style.color = "Red";
+         statusTable_cell.style.backgroundColor = "#FFDDDD";
+      }
+
+      // Display the SPECTER WARNINGS
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="specter";
+      statusTable_cell.className="specter";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "SPECTER WARNINGS"; // hover hint
+      statusTable_cell.alt = "SPECTER WARNINGS"; // hover hint for IE
+      var cellval = eval(fp_blocks[blk_iterator] + "_specter_warnings_status");
+      statusTable_cell.innerHTML=cellval;
+      if ((cellval == 0) || (cellval == "&nbsp")) {
+         statusTable_cell.innerHTML=cellval;
+         statusTable_cell.style.color = "Green";
+         statusTable_cell.style.backgroundColor = "White";
+      }else{
+         var linker = "/auto/ssefe5/antares_checks/latest/specter_index.html";
+         statusTable_cell.innerHTML= '<a href="'+linker+'"target="_blank">'+cellval+'</a>';
+         statusTable_cell.style.color = "Red";
+         statusTable_cell.style.backgroundColor = "#FFDDDD";
+      }
+
+      // Display the VCS WARNINGS
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="vcs";
+      statusTable_cell.className="vcs";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "VCS WARNINGS"; // hover hint
+      statusTable_cell.alt = "VCS WARNINGS"; // hover hint for IE
+      var cellval = eval(fp_blocks[blk_iterator] + "_vcs_warnings_status");
+      statusTable_cell.innerHTML=cellval;
+      if ((cellval == 0) || (cellval == "&nbsp")) {
+         statusTable_cell.innerHTML=cellval;
+         statusTable_cell.style.color = "Green";
+         statusTable_cell.style.backgroundColor = "White";
+      }else{
+         var linker = "/auto/ssefe5/antares_checks/latest/vcs_index.html";
+         statusTable_cell.innerHTML= '<a href="'+linker+'"target="_blank">'+cellval+'</a>';
+         statusTable_cell.style.color = "Red";
+         statusTable_cell.style.backgroundColor = "#FFDDDD";
+      }
+
+      // Display the SPYGLASS LINT
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="spyglass";
+      statusTable_cell.className="spyglass";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "SPYGLASS LINT"; // hover hint
+      statusTable_cell.alt = "SPYGLASS LINT"; // hover hint for IE
+      var cellval = eval(fp_blocks[blk_iterator] + "_spyglass_lint_status");
+      statusTable_cell.innerHTML=cellval;
+      if ((cellval == 0) || (cellval == "&nbsp")) {
+         statusTable_cell.style.color = "Green";
+         statusTable_cell.style.backgroundColor = "White";
+      }else{
+         statusTable_cell.style.color = "Red";
+         statusTable_cell.style.backgroundColor = "#FFDDDD";
+      }
+
+      // Display the FMEA CHECK
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="fmea";
+      statusTable_cell.className="fmea";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "FMEA CHECK"; // hover hint
+      statusTable_cell.alt = "FMEA CHECK"; // hover hint for IE
+      var cellval = eval(fp_blocks[blk_iterator] + "_fmea_check_status");
+      statusTable_cell.innerHTML=cellval;
+      if ((cellval == 0) || (cellval == "&nbsp")) {
+         statusTable_cell.innerHTML=cellval;
+         statusTable_cell.style.color = "Green";
+         statusTable_cell.style.backgroundColor = "White";
+      }else{
+         var linker = "/auto/ssefe5/antares_checks/latest/check_fmea_summary.log";
+         statusTable_cell.innerHTML= '<a href="'+linker+'"target="_blank">'+cellval+'</a>';
+         statusTable_cell.style.color = "Red";
+         statusTable_cell.style.backgroundColor = "#FFDDDD";
+      }
+
+      // Display the Comments
+      var statusTable_cell=statusTable_row.insertCell(-1);
+      statusTable_cell.id="comments";
+      statusTable_cell.className="comments";
+      statusTable_cell.style.verticalAlign="top";
+      statusTable_cell.style.fontSize = statusTableFontSize;
+      statusTable_cell.style.fontFamily = statusTableFontFamily;
+      statusTable_cell.title = "Comments"; // hover hint
+      statusTable_cell.alt = "Comments"; // hover hint for IE
+      // First place a textarea that is used to display/input the comment
+      var textbox_name = "Comments_textbox_" + fp_blocks[blk_iterator] + "__" + fp_names[fp_iterator]; // This is the name of the textbox to be inserted
+      window[textbox_name] = document.createElement('textarea');
+      window[textbox_name].name = textbox_name;
+      window[textbox_name].value = comments_text;
+      window[textbox_name].rows = "4";
+      statusTable_cell.appendChild(window[textbox_name]);
+      // Now place an input button to allow a modified comment to be saved
+      var textbox_button = "Comments_button_" + fp_blocks[blk_iterator] + "__" + fp_names[fp_iterator]; // This is the button that saves the text
+      window[textbox_button] = document.createElement('input');
+      window[textbox_button].type = "button";
+      window[textbox_button].name = textbox_button;
+      window[textbox_button].value = "Save";
+      window[textbox_button].onclick=handle_comments_save; // This is the event handler call for the click event
+
+      statusTable_cell.appendChild(window[textbox_button]);
+
+
+      // advance to next row in table associated with this FP
+      var statusTable_row=document.getElementById("statusTable").insertRow(-1);
+   }
+ } // end if for selected FPs
+
+} // end for
+
+// the code below for IE works with Document Mode set to Quirks or IE7 Standards
+if (navigator.appName == "Microsoft Internet Explorer") {
+   // duplicate the header at the bottom of the table for convenience
+   var headrow = document.getElementById("statusTable").tHead;
+   var clone = headrow.cloneNode(true);
+   document.getElementById("statusTable").appendChild(clone);
+}
+else { // the code below is sufficient to display the page correctly if the Document mode for IE is set to IE9 Standards
+   // duplicate the header at the bottom of the table for convenience
+   var headrow = document.getElementById("statusTable").rows[0];
+   var clone = headrow.cloneNode(true);
+   document.getElementById("statusTable").appendChild(clone);
+}
+
+
+</script>
+
+</body>
+
+<head>
+<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="expires" content="-1">
+</head>
+
+</html>
+ 
